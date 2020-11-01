@@ -1,3 +1,5 @@
+<h2>Download repo to test out the projects</h2>
+
 <h1>Quick list of proficiencies & skills</h1>
 <h2>Lorenss (mostly front-end)</h2>
 
