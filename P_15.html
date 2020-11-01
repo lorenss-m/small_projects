@@ -1,0 +1,107 @@
+<HTML>
+<head>
+<title> follow </title>
+<style>
+    body, html{
+        background-color:#2c0e3a;
+        margin:0;
+        overflow: hidden;
+    }
+</style>
+</head>
+<body>
+<canvas id=myCanvas width=300 height=300 style="background-color: none;"> 
+</canvas>
+<script>
+var ctx;
+var points = [];
+var pointC = 100;
+var drag = 500;
+var force = 2000;
+var radi = 100;
+var xh = 0;
+var yh = 0;
+init();
+
+function point(x, y, xv, yv){
+    this.x = x;
+    this.y = y;
+    this.xv = xv;
+    this.yv = yv;
+}
+
+function random(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+function init(){
+    canvas = document.getElementById("myCanvas");
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
+    canvasW = canvas.width;
+    canvasH = canvas.height;
+    drag = 1/drag;
+    ctx = canvas.getContext("2d");
+    gen();
+    draw();
+}
+
+function gen(){
+    for(x = 0; x < pointC; x++){
+        points.push(new point(random(0,canvas.width-10), random(0,canvas.height-10), 0, 0));
+    }
+}
+
+function draw(){
+    ctx.strokeStyle = "#6a217c";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(i = 0; i < points.length; i++){
+        if(Math.abs(points[i].x - xh) < radi && Math.abs(points[i].y - yh) < radi){
+            ctx.beginPath();
+            ctx.moveTo(xh, yh);
+            ctx.lineTo(points[i].x, points[i].y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(xh, yh);
+            ctx.lineTo(points[i].x, points[i].y);
+            ctx.stroke();
+            points[i].xv += (xh - points[i].x)/force;
+            points[i].yv += (yh - points[i].y)/force;
+        }
+        points[i].x += points[i].xv;
+        points[i].y += points[i].yv;
+        ctx.fillStyle = "#7c2565";
+        ctx.beginPath();
+        ctx.arc(points[i].x, points[i].y, 3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "#aa408e";
+        ctx.beginPath();
+        ctx.arc(points[i].x, points[i].y, 2, 0, Math.PI*2);
+        ctx.fill();
+        if(points[i].xv != 0){
+            if(points[i].xv < 0){
+                points[i].xv += drag;
+            }
+            else if(points[i].xv > 0){
+                points[i].xv -= drag;
+            }
+        }
+        if(points[i].yv != 0){
+            if(points[i].yv < 0){
+                points[i].yv += drag;
+            }
+            else if(points[i].yv > 0){
+                points[i].yv -= drag;
+            }
+        }
+    }
+    setTimeout(draw, 1);
+}
+
+document.onmousemove = function(e){
+    xh = e.clientX - document.getElementById('myCanvas').offsetLeft; 
+    yh = e.clientY - document.getElementById('myCanvas').offsetTop;
+}
+</script>
+</body>
+</html> 

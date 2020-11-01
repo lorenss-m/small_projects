@@ -1,0 +1,86 @@
+<HTML>
+ <head>
+  <title> sort3 </title>
+ </head>
+
+<body>
+ <canvas id=myCanvas width=300 height=300 style="background-color: pink;"> 
+ </canvas>
+ <div class="slidecontainer">
+  <input type="range" min="2" max="50" value="5" class="slider" id="colorcount" oninput="changespan()">
+</div>
+<button type="button" id="reset" onclick="reset()">Reset with <span id="colorcountdisplay">5</span> colors</button>
+ <script>
+    var ctx = myCanvas.getContext("2d"); 
+    var colorcount;
+    var px;
+    var colors;
+    function ra(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) ) + min;
+    }
+    reset();
+    fall();
+    function draw(){
+        ctx.clearRect(0,0,300,300);
+        for (var i = 0; i < 300; i++){
+            for (var j = 1; j < 299; j++){
+                for(f = 0;f < colorcount;f++){
+                    if(px[i][j] == f + 1){
+                        ctx.fillStyle = "rgb(" + colors[f][0] + ", " + colors[f][1] + ", " + colors[f][2] + ")";
+                        ctx.fillRect(i,j,1,1);
+                    }
+                }
+            }
+        }
+    }
+    function fall(){
+        for(var i = 1; i < 299; i++){
+            for(var j = 1; j < 299; j++){
+                if(px[i][j] > px[i + 1][j]){
+                    swap(i,j,1,0);
+                }
+                else if(px[i][j] < px[i - 1][j]){
+                    swap(i,j,-1,0);
+                }
+                else if(px[i][j] > px[i][j + 1]){
+                    swap(i,j,0,1);
+                }
+                else if(px[i][j] < px[i][j - 1]){
+                    swap(i,j,0,-1);
+                }
+            }
+        }
+        draw();
+        setTimeout(fall,10);
+    }
+    function swap(i,j,n,m){
+        var rem = px[i][j];
+        px[i][j] = px[i+n][j+m];
+        px[i+n][j+m] = rem;
+    }
+    function reset(){
+        colorcount = document.getElementById("colorcount").value;
+        colors = [];
+        px=[[0,0,0,0,0]];
+        for(d = 0;d < colorcount;d++){
+            colors.push([]);
+            for(f = 0;f < 3;f++){
+                colors[d].push(0)
+                colors[d][f] = ra(0,255);
+            }
+        }
+        for(var i=1; i<300; i++){
+            px.push([]);
+        }
+        for (var i = 0; i < 300; i++){
+            for (var j = px[i].length; j < 300; j++){
+                px[i].push(ra(1,colorcount));
+            }
+        }
+    }
+    function changespan(){
+        document.getElementById("colorcountdisplay").innerHTML = document.getElementById("colorcount").value;
+    }
+</script>
+</body>
+</html> 

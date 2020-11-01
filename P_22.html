@@ -1,0 +1,730 @@
+<HTML>
+<head>
+<link href='https://fonts.googleapis.com/css?family=Actor' rel='stylesheet'>
+<link href='https://fonts.googleapis.com/css?family=Advent Pro' rel='stylesheet'>
+<title> sandbox </title>
+<style>
+    body{
+        background:#cc436a;
+    }
+    .loader{
+        border: 16px solid #8c8c8c;
+        border-top: 16px solid black;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s ease-in-out infinite;
+    }
+    #load{
+        position:absolute;
+        top:500px;
+        left:600px;
+    }
+    .loadg{
+        position:absolute;
+        top:560px;
+        left:630px;
+        display: block;
+        font-size: 20px;
+    }
+    @keyframes spin {
+        0%{ 
+            transform: rotate(20deg); 
+        }
+        100%{ 
+            transform: rotate(380deg); 
+        }
+    }
+    #myCanvas{
+        position:relative;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        resize: both;
+        border-bottom:4px solid #5b001a;
+    }
+    .type{
+        float: left;
+        position: relative;
+        margin-left: auto;
+        margin-right: auto;
+        width:250px;
+    }
+    .type:hover .down{
+        height:40px;
+        padding:8px 2px;
+        font-size:18px;
+        color:white;
+        border-bottom:2px dashed #70152f;
+        background:none;
+    }
+    .btn{
+        font: 18px 'Advent Pro';
+        color:white;
+        border:none;
+        border-bottom:3px solid #70152f;
+        background:none;
+        padding:4px 12px;
+        cursor: pointer;
+        width:200px;
+        height:40px;
+    }
+    .top{
+        min-width: 200px;
+        display: block;
+    }
+    .down{
+        font-family: 'Advent Pro';
+        text-decoration: none;
+        display:block;
+        position:relative;
+        left:25px;
+        color: #cc436a;
+        border:none;
+        border-bottom:2px solid #cc436a;
+        background: none;
+        font-size:0px;
+        padding:none;
+        height:0px;
+        width:150px;
+        cursor: pointer;
+        transition: 0.5s all;
+    }
+    .down:hover{
+        opacity: 0.7;
+    }
+    .down:focus{
+        outline:none;
+    }
+    .select{
+        position: relative;
+        margin-left: auto;
+        margin-right: auto;
+        width:1000px;
+    }
+</style>
+</head>
+<body>
+    <div class = "select">
+        <div class = "type">
+            <input type="button" class="btn" value = "Drawing Style">
+                <div class="top">
+                    <input type="button" class="down" onclick="changeToLine()" id="line" value = "Line Mode">
+                    <input type="button" class="down" onclick="changeToRect()" id="Rect" value = "Rect Mode">
+                </div>
+        </div>
+        <div class = "type">
+            <input type="button" class="btn" value = "Building">
+                <div class="top">
+                    <input type="button" class="down" onclick="changeToSand()" id="line" value = "Sand">
+                    <input type="button" class="down" onclick="changeToGrass()" id="Rect" value = "Grass">
+                    <input type="button" class="down" onclick="changeToCement()" id="Rect" value = "Cement">
+                    <input type="button" class="down" onclick="changeToWater()" id="Rect" value = "Water">
+                </div>
+        </div>
+        <div class = "type">
+            <input type="button" class="btn" value = "Items">
+                <div class="top">
+                    <input type="button" class="down" onclick="changeToSeeds()" id="line" value = "Seeds">
+                </div>
+        </div>
+        <div class = "type">
+            <input type="button" class="btn" value = "Style">
+                <div class="top">
+                    <input type="button" class="down" onclick="changeToNormal()" id="line" value = "Normal">
+                    <input type="button" class="down" onclick="changeToPink()" id="line" value = "Pink">
+                </div>
+        </div>
+    </div>
+    <canvas id=myCanvas width=1300 height=400 style="background-color: #cc436a;">
+    </canvas>
+    <div class="loader" id="load"></div>
+    <div class="loadg" id="loadt">Generating...</div>
+    <p id = "fps1"></p>
+<script>
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext("2d"); 
+    var dstyle = 0;
+    var y_click = -1;
+    var x_click = -1;
+    var drag = false;
+    var lastPoint = null;
+    var startdrag = false;
+    var drawingRect = false;
+    var biomecounter = 0;
+    var fillType = 0;
+    var sandtype = 1;
+    var fpx = [];
+    var px = [[0]];
+    var camerax = 750;
+    var biome = [[1,canvas.height-canvas.height/10,canvas.height-canvas.height/20,1],[6,canvas.height-canvas.height/5,canvas.height-canvas.height/20,8],[4,canvas.height-canvas.height/50-canvas.height/30,canvas.height-canvas.height/50,0]];
+    var readyStateCheckInterval = setInterval(function() {
+        if (document.readyState === "complete") {
+            clearInterval(readyStateCheckInterval);
+            document.getElementById("load").style.display = "none";
+            document.getElementById("loadt").style.display = "none";
+        }
+    }, 10);
+    init();
+    function restart(){
+        clearTimeout(refall);
+        clearTimeout(rain);
+        clearTimeout(fall);
+        clearTimeout(fallrain);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        y_click = -1;
+        x_click = -1;
+        drag = false;
+        lastPoint = null;
+        startdrag = false;
+        drawingRect = false;
+        biomecounter = 0;
+        fillType = 0;
+        sandtype = 1;
+        fpx = [];
+        px = [[0]];
+        init();
+    }
+    function ra(min, max){
+        return Math.floor(Math.random() * (max - min + 1) ) + min;
+    }
+    function init(){
+        for(var i = 1; i < canvas.width; i++){
+            px.push([]);
+        }
+        for (var i = 0; i < canvas.width; i++){
+            for (var j = px[i].length; j < canvas.height; j++){
+                px[i].push(0);
+            }
+        }
+        refall();
+        gen();
+        //rain();
+        //setTimeout(fallrain,2500);
+    }
+    function draw(){
+        fpx.sort(function(a,b){
+            if (a[1] > b[1]) return 1;
+            if (a[1] < b[1]) return -1;
+            return 0;
+        });
+        for(var f = 0; f < fpx.length; f++){
+            var i = fpx[f][0];
+            var j = fpx[f][1];
+            if(px[i][j] != 0){
+                drawpixel(i,j);
+            }
+        }
+    }
+    function drawpixel(i,j){
+        if(dstyle == 0){
+            switch(px[i][j]){
+                case 1:
+                case 2:
+                    ctx.fillStyle = "#f6f7bb";
+                    break;
+                case 3:
+                    ctx.fillStyle = "white";
+                    break;
+                case 4:
+                    ctx.fillStyle = "#146dff";
+                    break;
+                case 5:
+                    ctx.fillStyle = "#dde3ff";
+                    break;
+                case 6:
+                case 7:
+                    ctx.fillStyle = "#1c3f04";
+                    break;
+                case 8:
+                case 10:
+                    ctx.fillStyle = "#4f2c0d";
+                    break;
+                case 9:
+                    ctx.fillStyle = "#012600";
+                    break;
+                case 11:
+                    ctx.fillStyle = "#229e1e";
+                    break;
+                case 13:
+                    ctx.fillStyle = "#717272";
+                    break;
+            }
+        }
+        else if(dstyle == 1){
+            switch(px[i][j]){
+                case 1:
+                case 2:
+                    ctx.fillStyle = "#fcc4d4";
+                    break;
+                case 3:
+                    ctx.fillStyle = "white";
+                    break;
+                case 4:
+                    ctx.fillStyle = "#fff7f9";
+                    break;
+                case 5:
+                    ctx.fillStyle = "#fff7f9";
+                    break;
+                case 6:
+                case 7:
+                    ctx.fillStyle = "#af002b";
+                    break;
+                case 8:
+                case 10:
+                    ctx.fillStyle = "#870134";
+                    break;
+                case 9:
+                    ctx.fillStyle = "#7c1b34";
+                    break;
+                case 11:
+                    ctx.fillStyle = "#ffccdf";
+                    break;
+                case 13:
+                    ctx.fillStyle = "#d8bcc3";
+                    break;
+            }
+        }
+        ctx.fillRect(i,j,1,1);
+    }
+    function changeToRect(){
+        fillType = 1;
+    }
+    function changeToLine(){
+        fillType = 0;
+    }
+    function changeToSand(){
+        sandtype = 1;
+    }
+    function changeToWater(){
+        sandtype = 4;
+    }
+    function changeToGrass(){
+        sandtype = 6;
+    }
+    function changeToSeeds(){
+        sandtype = 8;
+    }
+    function changeToCement(){
+        sandtype = 13;
+    }
+    function changeToNormal(){
+        var rest = confirm("This is going to reset the terrain!\nContinue?");
+        if(rest){
+            dstyle = 0;
+            restart();
+        }
+    }
+    function changeToPink(){
+        var rest = confirm("This is going to reset the terrain!\nContinue?");
+        if(rest){
+            dstyle = 1;
+            restart();
+        }
+    }
+    function fallrain(){
+        var h = ra(0,5);
+        if(h < 1){
+            for (var i = 0; i < px.length; i++){
+                for (var j = px[i].length - 1; j >= 0; j--){
+                    if(px[i][j] == 5){
+                        var fll = ra(0,5);
+                        if(fll < 2){
+                            px[i][j] = 4;
+                        }
+                    }
+                }
+            }
+            setTimeout(fallrain,10000);
+        }
+        else{
+            setTimeout(fallrain,5000);
+        }
+    }
+    function rain(){
+        var h = ra(0,5);
+        if(h < 1){
+            for (var i = 0; i < px.length; i++){
+                for (var j = px[i].length - 1; j >= 0; j--){
+                    if(px[i][j] == 4){
+                        if(px[i][j - 1] == 0){
+                            ctx.clearRect(i,j,1,1);
+                            ctx.clearRect(i,j + 1,1,1);
+                            px[i][j] = 0;
+                            px[i][j + 1] = 0;
+                            var lx = ra(0,5);
+                            var ly = ra(0,100);
+                            px[i+lx][10+ly] = 5;
+                            fpx.push([i+lx,10+ly]);
+                        }
+                    }
+                }
+            }
+            setTimeout(rain,10000);
+        }
+        else{
+            setTimeout(rain,5000);
+        }
+    }
+    function refall(){
+        for(var i = 0; i < px[0].length; i++){
+            for(var j = px.length; j >= 0; j--){
+                if(px[i][j] != 0 && px[i][j+1]==0){
+                    fpx.push([i,j]);
+                }
+            }
+        }
+        setTimeout(refall,2000);
+    }
+    function fall(){
+        fpx.sort(function(a,b){
+            if(a[1] > b[1]) return -1;
+            if(a[1] < b[1]) return 1;
+            return 0;
+        });
+        for(var f = 0; f < fpx.length; f++){
+            var i = fpx[f][0];
+            var j = fpx[f][1];
+            if(i < px.length && i > 0 && j > 0 && j < px[0].length && px[i+1][j] != 0 && px[i-1][j] != 0 && px[i+1][j+1] != 0 && px[i+1][j-1] != 0 && px[i-1][j+1] != 0 && px[i][j+1] != 0 && px[i][j-1] != 0 && px[i-1][j-1] != 0 && px[i][j] != 4){
+                drawpixel(fpx[f][0],fpx[f][1]);
+                fpx.splice(f,1);
+                f--;
+            }
+            else if(px[i][j] != 0){
+                ctx.clearRect(i,j,1,1);
+                if(px[i][j] == 1){
+                    if(px[i][j + 1] == 0){
+                        px[i][j] = 0;
+                        px[i][j + 1] = 1;
+                        fpx[f][1] = fpx[f][1] + 1;
+                    }
+                    else if(j < px[0].length - 3 && i > 0 && i < px.length && j > 0){
+                        var maybemore = ra(0,10); 
+                        if(px[i - 1][j + 3] == 0){
+                            px[i][j] = 0;
+                            px[i - 1][j] = 1;
+                            fpx[f][0] = fpx[f][0] - 1;
+                        }
+                        else if(px[i + 1][j + 3] == 0){
+                            px[i][j] = 0;
+                            px[i + 1][j] = 1;
+                            fpx[f][0] = fpx[f][0] + 1;
+                        }
+                        else if(maybemore > 6 && px[i - 1][j + 2] == 0){
+                            px[i][j] = 0;
+                            px[i - 1][j] = 1;
+                            fpx[f][0] = fpx[f][0] - 1;
+                        }
+                        else if( maybemore > 6 && px[i + 1][j + 2] == 0){
+                            px[i][j] = 0;
+                            px[i + 1][j] = 1;
+                            fpx[f][0] = fpx[f][0] + 1;
+                        }
+                        else if(maybemore < 1 && px[i + 1][j + 1] == 0){
+                            px[i][j] = 0;
+                            px[i + 1][j] = 1;
+                            fpx[f][0] = fpx[f][0] + 1;
+                        }
+                        else if(maybemore < 1 && px[i - 1][j + 1] == 0){
+                            px[i][j] = 0;
+                            px[i - 1][j] = 1;
+                            fpx[f][0] = fpx[f][0] - 1;
+                        }
+                    }
+                }
+                else if(px[i][j] == 4){
+                    if(px[i][j + 1] == 0){
+                        px[i][j] = 0;
+                        px[i][j + 1] = 4;
+                        fpx[f][1] = fpx[f][1] + 1;
+                    }
+                    else if(j < px[0].length && j > 0){
+                        var water_second = true;
+                        for(t=1;t<canvas.width-i;t++){
+                            if(px[i + t][j + 1] == 0 && px[i + t][j] == 0){
+                                fpx[f][0] = fpx[f][0] + t;
+                                px[i][j] = 0;
+                                px[i + t][j] = 4;
+                                var water_second = false;
+                                break;
+                            }
+                            if(px[i + t][j] != 0){
+                                break;
+                            }
+                        }
+                        if(water_second){
+                            for(t=1;t<i;t++){
+                                if(px[i - t][j + 1] == 0 && px[i - t][j] == 0){
+                                    fpx[f][0] = fpx[f][0] - t;
+                                    px[i][j] = 0;
+                                    px[i - t][j] = 4;
+                                    break;
+                                }
+                                if(px[i - t][j] != 0){
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    for(w=-4;w<5;w++){
+                        for(h=-4;h<5;h++){
+                            if(i + w < canvas.width - 1 && j + h < canvas.height - 1 && j + h > 0 && i + w > 0){
+                                if(px[i + w][j + h] == 6 || px[i + w][j + h] == 7){
+                                    px[i + w][j + h] = 9;
+                                }
+                            }
+                        }
+                    }
+                }
+                else if(px[i][j] == 5){
+                    var way = ra(-1,1);
+                    var yway = ra(-1,1);
+                    if(i + way < canvas.width && i + way > 0 && j + yway < canvas.height && j + yway > 0){
+                        px[i][j] = 0;
+                        px[i + way][j + yway] = 5;
+                        fpx[f][1] = fpx[f][1] + yway;
+                        fpx[f][0] = fpx[f][0] + way;
+                    }
+                }
+                else if(px[i][j] == 6){
+                    if(px[i][j + 1] == 0){
+                        px[i][j] = 0;
+                        px[i][j + 1] = 6;
+                        fpx[f][1] = fpx[f][1] + 1;
+                    }
+                    else if(j < px[0].length - 3 && i > 0 && i < px.length && j > 0){
+                        var maybemore = ra(0,4); 
+                        if(px[i - 1][j + 3] == 0){
+                            px[i][j] = 0;
+                            px[i - 1][j] = 6;
+                            fpx[f][0] = fpx[f][0] - 1;
+                        }
+                        else if(px[i + 1][j + 3] == 0){
+                            px[i][j] = 0;
+                            px[i + 1][j] = 6;
+                            fpx[f][0] = fpx[f][0] + 1;
+                        }
+                        else if(maybemore > 3 && px[i - 1][j + 2] == 0){
+                            px[i][j] = 0;
+                            px[i - 1][j] = 6;
+                            fpx[f][0] = fpx[f][0] - 1;
+                        }
+                        else if(maybemore > 3 && px[i + 1][j + 2] == 0){
+                            px[i][j] = 0;
+                            px[i + 1][j] = 6;
+                            fpx[f][0] = fpx[f][0] + 1;
+                        }
+                    }
+                }
+                else if(px[i][j] == 9){
+                    if(px[i][j + 1] == 0){
+                        px[i][j] = 0;
+                        px[i][j + 1] = 9;
+                        fpx[f][1] = fpx[f][1] + 1;
+                    }
+                }
+                else if(px[i][j] == 8){
+                    if(px[i][j + 1] == 0){
+                        px[i][j] = 0;
+                        px[i][j + 1] = 8;
+                        fpx[f][1] = fpx[f][1] + 1;
+                    }
+                    else if(j < px[0].length){
+                        if(px[i][j + 1] == 9){
+                            px[i][j] = 12;
+                        }
+                    }
+                }
+                else if(px[i][j] == 12){
+                    for(x=0;x<7;x++){
+                        px[i][j-x]=10;
+                        fpx.push([i,j-x]);
+                    }
+                    px[i][j-7]=11;
+                    px[i-1][j-7]=11;
+                    px[i+1][j-7]=11;
+                    px[i+2][j-7]=11;
+                    px[i-2][j-7]=11;
+                    px[i-1][j-8]=11;
+                    px[i+1][j-8]=11;
+                    px[i][j-8]=11;
+                    px[i][j-9]=11;
+                    fpx.push([i,j-7]);
+                    fpx.push([i-1,j-7]);
+                    fpx.push([i+1,j-7]);
+                    fpx.push([i+2,j-7]);
+                    fpx.push([i-2,j-7]);
+                    fpx.push([i-1,j-8]);
+                    fpx.push([i+1,j-8]);
+                    fpx.push([i,j-8]);
+                    fpx.push([i,j-9]);
+                }
+                else if(px[i][j] == 13){
+                    drawpixel(fpx[f][0],fpx[f][1]);
+                    fpx.splice(f,1);
+                    f--;
+                }
+            }
+        }
+        //gameLoop();
+        draw();
+        setTimeout(fall,1);
+    }
+    function gen(){
+        var currentbiome = 0;
+        var height = ra(0,biome[currentbiome][2] - biome[currentbiome][1]);
+        var stheight = biome[currentbiome][1];
+        for(var i = 0; i < canvas.width/20; i++){
+            for(var x = 0; x < 20; x++){
+                for(var y = canvas.height - 1; y > stheight + height; y--){
+                    px[x+i*20][y] = biome[currentbiome][0];
+                    drawpixel(x+i*20,y);
+                }
+                if(biomecounter > 300){
+                    var chb = ra(0,30);
+                    if(chb < 1){
+                        currentbiome = ra(0,biome.length - 1);
+                        biomecounter = 0;
+                    }
+                }
+                var rh = ra(-(biome[currentbiome][3])/5,biome[currentbiome][3]/5);
+                if(rh != 0){
+                    if(stheight + height + rh < biome[currentbiome][2]){
+                        height += rh;
+                    }
+                }
+                biomecounter++;
+            }
+        }
+        document.getElementById("loadt").innerHTML = "Optimizing...";
+        setTimeout(fall,100);
+    }
+    function line(x1,y1,x2,y2){
+        var dy = y2 - y1;
+        var dx = x2 - x1;
+        var len = Math.sqrt(dx*dx + dy*dy);
+        var ddx = dx/len;
+        var ddy = dy/len;
+        for(i = 0;i < len;i++){
+            x1 = x1 + ddx;
+            y1 = y1 + ddy;
+            px[Math.round(x1)][Math.round(y1)] = sandtype;
+            fpx.push([Math.round(x1),Math.round(y1)]);
+        }
+    }
+    function small(c1,c2){
+        if(c1>c2){
+            return c2;
+        }
+        else{
+            return c1;
+        }
+    }
+    function rect(x1,y1,x2,y2,type){
+        for(i = small(x1,x2);i < small(x1,x2) + Math.abs(x1-x2);i++){
+            for(j = small(y1,y2);j < small(y1,y2) + Math.abs(y1-y2);j++){
+                px[i][j] = type;
+                fpx.push([i,j]);
+            }
+        }
+    }
+    function myDown(e){
+        if(drag && fillType == 0){
+            lastPoint = [x_click,y_click];
+            x_click = e.pageX - canvas.offsetLeft;
+            y_click = e.pageY - canvas.offsetTop;
+            px[x_click][y_click] = sandtype;
+            fpx.push([x_click,y_click]);
+            if(lastPoint[0] > 0){
+                line(lastPoint[0],lastPoint[1],x_click,y_click);
+            }
+        }
+        if(drag && fillType == 1){
+            drawingRect = true;
+            x_click = e.pageX - canvas.offsetLeft;
+            y_click = e.pageY - canvas.offsetTop;
+            if(startdrag){    
+                lastPoint = [x_click,y_click];
+                startdrag = false;
+            }
+        }
+        draw();
+    }
+    function tru(){
+        drag = true;
+        startdrag = true;
+    }
+    function fals(){
+        drag = false;
+        startdrag = false;
+        if(drawingRect){
+            rect(lastPoint[0],lastPoint[1],x_click,y_click,sandtype);
+            drawingRect = false;
+        }
+        x_click = -1;
+    }
+    function clearThrees(){
+        for(var f = 0; f < fpx.length; f++){
+            var i = fpx[f][0];
+            var j = fpx[f][1];
+            if(px[i][j] == 3){
+                ctx.clearRect(fpx[f][0],fpx[f][1],1,1);
+                fpx.splice(f,1);
+                f--;
+            }
+        }
+        for (var i = 0; i < canvas.width; i++){
+            for (var j = 0; j < canvas.height; j++){
+                if(px[i][j] == 3){
+                    px[i][j] = 0;
+                }
+            }
+        }
+    }
+    function clicked(e){
+        drag = true;
+        startdrag = true;
+        myDown(e);
+        drag = false;
+        startdrag = false;
+        x_click = -1;
+    }
+    var lastLoop = new Date();
+    function gameLoop(){
+        var thisLoop = new Date();
+        var fps = 1000 / (thisLoop - lastLoop);
+        lastLoop = thisLoop;
+        document.getElementById("fps1").innerHTML = Math.floor(fps) + " fps";
+    }
+    var r = false;
+    var l = false;
+    function handleKeyDown(event){
+        if(event.keyCode == 37){
+            camerax--;
+            draweverything(-1);
+        }
+        else if(event.keyCode == 39){
+            camerax++;
+            draweverything(1);
+        }       
+    }
+    function draweverything(x){
+        fpx = [];
+        for(var i = 1; i < px[0].length - 1; i++){
+            for(var j = 1; j < px.length - 1; j++){
+                if(px[i][j] != 0){
+                    fpx.push([i+x,j]);
+                    px[i][j] = px[i+x][j];
+                    px[i+x][j] = 0;
+                }
+            }
+        }
+    }
+    window.addEventListener('keypress', handleKeyDown);
+    document.addEventListener("mousedown", tru);
+    document.addEventListener("mouseup", fals);                
+    document.addEventListener("mousemove", myDown);
+    document.addEventListener('click', clicked, false);
+</script>
+</body>
+</html> 

@@ -1,0 +1,150 @@
+<HTML>
+<head>
+<title> 3d css testing </title>
+<style>
+body{
+    background-image: linear-gradient(to bottom right, rgb(52, 79, 17), rgb(57, 17, 79));
+    perspective:800px;
+    perspective-origin: 50% 50%;
+}
+.cube-container {
+    position: relative;
+    display: block;
+    margin-left:auto;
+    margin-right:auto;
+    top: 100px;
+    width: 10%;
+    transform: translateX(-50%);
+    height: 70%;
+}
+.cube{
+    position: relative;
+    animation: rotate 5s infinite ease-in-out;
+    transform-style: preserve-3d;
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.8);
+}
+#cube1{
+    left:0%;
+}
+#cube2{
+    left:300%;
+}
+#cube3{
+    left:-300%;
+}
+#cube1 .part{
+    background-color:rgba(152, 244, 66, 0.1);
+}
+#cube2 .part{
+    background-color:rgba(66, 244, 244, 0.1);
+}
+#cube3 .part{
+    background-color:rgba(181, 65, 244, 0.1);
+}
+#cube1 #front,#back {
+    background-color:rgba(152, 244, 66, 0.8);
+}
+#cube2 #front,#back {
+    background-color:rgba(66, 244, 244, 0.8);
+}
+#cube3 #front,#back {
+    background-color:rgba(181, 65, 244, 0.8);
+}
+.part{
+    position:absolute;
+    width:200px;
+    height:200px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.8);
+}
+.cube #front {
+    transform: translateZ(100px);
+}
+.cube #back {
+    transform: rotateY(180deg) rotateX(0deg) translateZ(100px);
+}
+.cube #left {
+    transform: rotateY(-90deg) translateZ(100px);
+}
+.cube #right {
+    transform: rotateY(90deg) translateZ(100px);
+}
+.cube #top {
+    transform: rotateX(90deg) translateZ(100px);
+}
+.cube #bottom {
+    transform: rotateX(-90deg) rotateZ(-180deg) translateZ(100px);
+}
+@keyframes rotate{
+    from{
+        transform: rotate3d(0.5,1,0.1,0deg);
+    }
+    to{
+        transform: rotate3d(0.7,1,0.3,360deg);
+    }
+}
+.slider{
+    position: relative;
+    display: block;
+    margin-left:auto;
+    margin-right:auto;
+    width: 50%;
+    height: 25px;
+    background-image: linear-gradient(to right, rgba(181, 65, 244, 1) , rgba(152, 244, 66, 1) , rgba(66, 244, 244, 1));
+    -webkit-appearance: none;
+    outline: none;
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.8);
+}
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: black;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: black;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="cube-container">
+    <div class = "cube" id = "cube1">
+        <figure class = "part" id = "left"></figure>
+        <figure class = "part" id = "front"></figure>
+        <figure class = "part" id = "right"></figure>
+        <figure class = "part" id = "back"></figure>
+        <figure class = "part" id = "top"></figure>
+        <figure class = "part" id = "bottom"></figure>
+    </div>
+    <div class = "cube" id = "cube2">
+        <figure class = "part" id = "left"></figure>
+        <figure class = "part" id = "front"></figure>
+        <figure class = "part" id = "right"></figure>
+        <figure class = "part" id = "back"></figure>
+        <figure class = "part" id = "top"></figure>
+        <figure class = "part" id = "bottom"></figure>
+    </div>
+    <div class = "cube" id = "cube3">
+        <figure class = "part" id = "left"></figure>
+        <figure class = "part" id = "front"></figure>
+        <figure class = "part" id = "right"></figure>
+        <figure class = "part" id = "back"></figure>
+        <figure class = "part" id = "top"></figure>
+        <figure class = "part" id = "bottom"></figure>
+    </div>
+</div>
+<input type="range" min="1" max="1000" value="500" class="slider" onchange="speedChange()" id="speed">
+<script>
+function speedChange(){
+    document.getElementById("cube1").style.animationDuration = (document.getElementById("speed").max/100-document.getElementById("speed").value/100+1) + 's';
+    document.getElementById("cube2").style.animationDuration = (document.getElementById("speed").max/100-document.getElementById("speed").value/100+1) + 's';
+    document.getElementById("cube3").style.animationDuration = (document.getElementById("speed").max/100-document.getElementById("speed").value/100+1) + 's';
+}
+</script>
+</body>
+</html> 

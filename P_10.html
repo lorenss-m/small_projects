@@ -1,0 +1,209 @@
+<HTML>
+<head>
+<title> lf_02 </title>
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<style>
+    body{
+        margin: 0;
+        background-color: black;
+    }
+    canvas{
+        filter: blur(50%);
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        background-color: none;
+    }
+    #hoverbar{
+        position: absolute;
+        width: 12%;
+        left: 0px;
+        height: 100%;
+    }
+    #sidebar{
+        background-color: rgba(0, 0, 0, 0.5);
+        position: absolute;
+        width: 0%;
+        left: 0px;
+        height: 100%;
+        transition: 0.5s all ease;
+    }
+    #hoverbar:hover #sidebar{
+        width: 100%;
+    }
+    #hoverbar:hover #reset{
+        width: 100%;
+        opacity: 1;
+    }
+    #hoverbar:hover .holder{
+        width: 80%;
+        opacity: 1;
+    }
+    #reset{
+        transition: 0.5s all ease;
+        position: relative;
+        opacity: 0;
+        width: 0%;
+        background-color: transparent;
+        color: white;
+        border: none;
+        margin: 20px 0px;
+        font-size: 1vw;
+        overflow: hidden;
+        font-family: Montserrat;
+    }
+    #reset:focus{
+        outline: none;
+    }
+    .hue{
+        width: 100%;
+    }
+    .holder{
+        transition: 0.5s all ease 0.2s;
+        position: relative;
+        margin: 20px 0px;
+        width: 0%;
+        opacity: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .slider{
+        background-color: rgba(0, 0, 0, 0);
+        -webkit-appearance: none;
+        outline: none;
+    }
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 10px;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+    }
+    .slider::-moz-range-thumb {
+        width: 25px;
+        height: 25px;
+        background: rgba(0, 0, 0, 0.8);
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<canvas id = field></canvas>
+<div id = "hoverbar">
+    <div id = "sidebar">
+        <button id = "reset" onclick = "reset();">Reset</button>
+        <div class = "holder">
+            <input type="range" min="0" max="250" value="200" oninput = "colorchange();" id = "hue" class="slider">
+        </div>
+        <div class = "holder">
+            <input type="range" min="0" max="250" value="60" oninput = "colorchange();" id = "huev" class="slider">
+        </div>
+        <div class = "holder">
+            <input type="range" min="1" max="1500" value="500" oninput = "countChange();" id = "count" class="slider">
+        </div>
+    </div>
+</div>
+<script>
+var squiggleCount = 500;
+var segmentLimits = [5, 10];
+
+var ctx = field.getContext("2d");
+var squiggles = [];
+var hueMod = 200
+var hueVar = 60;
+
+field.width = document.body.clientWidth;
+field.height = document.body.clientHeight;
+
+ctx.lineWidth = 3;
+
+function random(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+function randomBrightColor(){
+    return "hsl(" + ((hueVar * Math.random()) + hueMod) + ', 100%, 50%)';
+}
+
+function squiggle(){
+    this.x = random(0, field.width);
+    this.y = random(0, field.height);
+    this.color = randomBrightColor();
+    this.segments = [];
+    this.makeSegments = function(){
+        let segmentC = random(segmentLimits[0], segmentLimits[1]);
+        for(o = 1; o < segmentC; o++){
+            this.segments.push([random(this.segments[o - 1][0] - 30, this.segments[o - 1][0] + 30), random(this.segments[o - 1][1] - 30, this.segments[o - 1][1] + 30)]);
+        }
+    }
+    this.reset = function(){
+        this.segments = [];
+        this.color = randomBrightColor();
+        this.x = random(0, field.width);
+        this.y = random(0, field.height);
+    }
+}
+
+function reset(){
+    hueMod = Number(hue.value);
+    hueVar = Number(huev.value);
+    squiggles = [];
+    generate();
+}
+
+function countChange(){
+    if(count.value - squiggleCount < 0){
+        squiggles.splice(0, squiggleCount - count.value);
+    }
+    else{
+        for(i = 0; i < count.value - squiggleCount; i++){
+            squiggles.push(new squiggle());
+            squiggles[squiggles.length - 1].segments = [[squiggles[squiggles.length - 1].x, squiggles[squiggles.length - 1].y]];
+            squiggles[squiggles.length - 1].makeSegments();
+        }
+    }
+    squiggleCount = count.value;
+}
+
+function colorchange(){
+    hueMod = Number(hue.value);
+    hueVar = Number(huev.value);
+    document.body.style.backgroundColor = "hsl(" + ((hueVar * Math.random()) + hueMod) + ', 100%, 7%)';
+    for(i = 0; i < squiggleCount; i++){
+        squiggles[i].color = randomBrightColor();
+    }
+}
+
+function generate(){
+    document.body.style.backgroundColor = "hsl(" + ((hueVar * Math.random()) + hueMod) + ', 100%, 7%)';
+    for(i = 0; i < squiggleCount; i++){
+        squiggles.push(new squiggle());
+        squiggles[i].segments = [[squiggles[i].x, squiggles[i].y]];
+        squiggles[i].makeSegments();
+    }
+}
+
+function show(){
+    ctx.clearRect(0, 0, field.width, field.height);
+    for(i = 0; i < squiggles.length; i++){
+        ctx.strokeStyle = squiggles[i].color;
+        for(o = 0; o < squiggles[i].segments.length - 1; o++){
+            //console.log(squiggles[i].segments[o][0]);
+            ctx.beginPath();
+            ctx.moveTo(squiggles[i].segments[o][0], squiggles[i].segments[o][1]);
+            ctx.lineTo(squiggles[i].segments[o + 1][0], squiggles[i].segments[o + 1][1]);
+            ctx.stroke();
+            squiggles[i].segments[o][0] += random(-1, 1);
+            squiggles[i].segments[o][1] += random(-1, 1);
+        }
+    }
+}
+
+generate();
+setInterval(show, 15);
+//show();
+</script>
+
+</body>
+</html> 

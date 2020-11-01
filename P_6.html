@@ -1,0 +1,112 @@
+<HTML>
+<head>
+  <title> lf_04 </title>
+  <style>
+    body{
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id=plot width=540 height=540 style="background-color: none; position: absolute; left: 50%; transform: translateX(-50%);"> </canvas>
+
+  <script>
+  const ctx = plot.getContext("2d"); 
+  
+  const mapKey = [
+    [1, 1, 0],
+    [1, 0, 0],
+    [0, 0, 0]
+  ];
+  
+  const randomTarget = 0;
+  
+  const colorChangeSpeed = 1;
+  
+  let mod = -180;
+  
+  const horizontalCount = 40;
+  const verticalCount = 40;
+
+  plot.width = document.body.clientWidth;
+  plot.height = document.body.clientHeight;
+  
+  let map = [];
+  
+  function blob(val, targetVal) {
+    this.targetVal = targetVal;
+    this.val = val; // heightmap height
+  }
+  
+  function genBlobs(){
+    for(i = 0; i < horizontalCount; i++){
+      map.push([]);
+      for(o = 0; o < verticalCount; o++){
+        map[i].push(new blob(random(0, 360), random(0, 360)));
+      }
+    }
+  }
+  
+  function draw(){
+    map.forEach((a, ind) => {
+      a.forEach((b, ind2) => {
+          ctx.fillStyle = `hsl(${b.val + mod}, 50%, 50%)`;
+          ctx.beginPath();
+          ctx.arc(ind * 10 + plot.width/2 - horizontalCount*5, ind2 * 10 + 10, 7, 0, Math.PI * 2);
+          ctx.fill();
+          if(b.val != b.targetVal && b.targetVal < 360 && b.targetVal > 0){
+            b.val += Math.sign(b.targetVal - b.val);
+          }
+          else{
+            if(ind > 0 && ind2 > 0 && ind < horizontalCount - 1 && ind2 < verticalCount - 1){
+              newTargetAverage(ind, ind2, b);
+            }
+            else{
+              b.targetVal = random(0, 360);
+            }
+          }
+      });
+    });
+    if(mod < 180){
+      mod += colorChangeSpeed;
+    }
+    else{
+      mod = -180;
+    }
+    setTimeout(draw, 10);
+  }
+
+  random = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+  }
+  
+  getAvg = (arr) => {
+    const total = arr.reduce((acc, c) => acc + c, 0);
+    return total / arr.length;
+  }
+  
+  getAreaAvg = (i1, i2) => {
+    let carray = [];
+    for(i = 0; i < 3; i++){
+      for(o = 0; o < 3; o++){
+        if(mapKey[i][o] == 1){
+          carray.push(map[i1 + 1 - i][i2 + 1 - o].targetVal);
+        }
+      }
+    }
+    return getAvg(carray);
+  }
+  
+  newTargetAverage = (ind, ind2, b) => {
+    let targetAvg = getAreaAvg(ind, ind2);
+    b.targetVal = Math.round(random(targetAvg - randomTarget, targetAvg + randomTarget));
+  }
+  
+  genBlobs();
+  draw();
+
+  </script>
+
+</body>
+</html> 

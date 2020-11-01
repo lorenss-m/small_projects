@@ -1,0 +1,146 @@
+<HTML>
+ <head>
+  <title> calculator </title>
+ </head>
+
+<body>
+ <canvas id=myCanvas width=300 height=300 style="background-color: pink;"> 
+ </canvas>
+ <textarea id="inp" style="caret-color: red; ">(9-5)(5-9)/4^2</textarea>
+ <button onClick="comp();">Go!</button>
+ <script>
+var ctx = myCanvas.getContext("2d"); 
+function node(m,str){
+    this.move=m;
+    this.string=str;
+    this.children=[];
+    this.value=null;
+    this.crch=function(){
+        alert(this.string);
+        if(this.string.match(/^-?[0-9]+$/)){
+            
+            return parseInt(this.string);
+        }else{
+            this.string=this.string.replace(/(?<=[0-9]|\))\(/,"*(");
+            this.string=this.string.replace(/\)(?=[0-9])/,")*");
+            
+            var p=this.string.match(/\(.*?\)/g);
+            if(p!=null){
+                var p2=this.string.split(/\(.*?\)/g);
+                if(p2[0]==""){
+                    p2.splice(0,1);
+                }
+                if(p2[p2.length-1]==""){
+                    p2.splice(p2.length-1,1);
+                }
+                var st=false;
+                if(this.string.charAt(0)=="(")st=true;
+                var en=false;
+                if(this.string.charAt(this.string.length-1)==")")en=true;
+                this.string="";
+                var te;
+                for(var i=0;i<p.length;i++){
+                    p[i]=p[i].substring(1,p[i].length-1);
+                    te=new node(0,p[i]);
+                    p[i]=te.crch();
+                }
+                
+                if(st){
+                    if(en){
+                        this.string=this.string+p[0];
+                        for(var i=0;i<p2.length;i++){
+                            this.string=this.string+p2[i]+p[i+1];
+                        }
+                    }else{
+                        for(var i=0;i<p2.length;i++){
+                            
+                            this.string=this.string+p[i]+p2[i];
+                        }
+                    }
+                }else{
+                    if(en){
+                        for(var i=0;i<p2.length;i++){
+                            this.string=this.string+p2[i]+p[i];
+                        }
+                    }else{
+                        this.string=this.string+p2[0];
+                        for(var i=0;i<p.length;i++){
+                            
+                            this.string=this.string+p[i]+p2[i+1];
+                        }
+                    }
+                }
+            }
+            var l=0;
+            var res=[];
+            if(this.string.indexOf("+")!=-1){
+                l=this.string.indexOf("+");
+                this.children.push(new node(1,this.string.slice(0,l)));
+                this.children.push(new node(1,this.string.slice(l+1)));
+                return this.children[0].crch()+this.children[1].crch();
+            }else if(this.string.search(/(?<=[0-9]+)-/)!=-1){
+                l=this.string.search(/(?<=[0-9]+)-/);
+                this.children.push(new node(2,this.string.slice(0,l)));
+                this.children.push(new node(2,this.string.slice(l+1)));
+                return this.children[0].crch()-this.children[1].crch();
+            }else if(this.string.indexOf("/")!=-1){
+                l=this.string.indexOf("/");
+                this.children.push(new node(3,this.string.slice(0,l)));
+                this.children.push(new node(3,this.string.slice(l+1)));
+                return this.children[0].crch()/this.children[1].crch();
+            }else if(this.string.indexOf("*")!=-1){
+                l=this.string.indexOf("*");
+                this.children.push(new node(4,this.string.slice(0,l)));
+                this.children.push(new node(4,this.string.slice(l+1)));
+                return this.children[0].crch()*this.children[1].crch();
+            }else if(this.string.indexOf("^")!=-1){
+                l=this.string.indexOf("^");
+                this.children.push(new node(4,this.string.slice(0,l)));
+                this.children.push(new node(4,this.string.slice(l+1)));
+                var temp=this.children[0].crch();
+                var de=Math.abs(this.children[1].crch());
+                if(de!=0){
+                    
+                    for(var i=0;i<de-1;i++){
+                        temp=temp*this.children[0].crch();
+                    }
+                    if(de>0){
+                        return temp;
+                    }else{
+                        return 1/temp;
+                    }
+                }else{
+                    return 1;
+                }
+                
+            }else{
+                try{
+                    return "FUCK OFF!";
+                }catch(e){}
+            }
+            
+            
+        }
+    }
+}
+function comp(){
+    var string=inp.value;
+    string=string.replace(/\s+/,"");
+    var s=new node(0,string);
+    inp.value="="+s.crch();
+}
+window.addEventListener("keydown", function(e) {
+    // space and arrow keys
+    if([9].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+        if(e.keyCode==9){
+            inp.value=inp.value+"\t"
+        }
+    }
+}, false);
+  // Your code goes here! 
+  // If you're not sure how to code Javascript, go back and read the S2JS tutorials 
+
+</script>
+</body>
+</html> 

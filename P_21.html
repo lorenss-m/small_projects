@@ -1,0 +1,143 @@
+<HTML>
+<head>
+<title> clothnr2 </title>
+<style>
+    body{
+        background-color:black;
+    }
+</style>
+</head>
+<body>
+<canvas id=myCanvas width=1200 height=5000 style="background-color: none;"> 
+</canvas>
+<script>
+var ctx = myCanvas.getContext("2d"); 
+var nodes = [];
+var constraints = [];
+var airdrag = 0.5;
+var mx = 0;
+var my = 0;
+var click = -1;
+var seed = [80,5,10,5,100];
+var xl = seed[0];
+var yl = seed[1];
+var spacingx = myCanvas.width/xl - xl/20;
+var spacingy = seed[2];
+var stress = seed[3];
+var rubf = seed[4];
+var snap = false;
+var data;
+var gravitationalcons = 0.5;
+var gumstr = 0.5;
+ctx.fillStyle = "white";
+for(var i=0;i<xl;i++){
+    nodes.push(new node(80+(i*spacingx),80-spacingy,true));
+}
+for(var i=0;i<yl;i++){
+    for(var i2=0;i2<xl;i2++){
+        nodes.push(new node(80+(i2*spacingx),80+(i*spacingy),false));
+    }
+}
+for(var i=xl;i<nodes.length;i++){
+    constraints.push([i-xl,i]);
+}
+for(var i=xl;i<nodes.length-1;i++){
+    constraints.push([i,i+1]);
+}
+for(var i=0;i<constraints.length;i++){
+    var n1 = nodes[constraints[i][0]];
+    var n2 = nodes[constraints[i][1]];
+    data = distance(n1.x,n1.y,n2.x,n2.y);
+    if(data[0]>rubf){
+        constraints.splice(i,1);
+        i--;
+    }
+}
+function node(x,y,an){
+    this.x=x;
+    this.y=y;
+    this.xv=0;
+    this.yv=0;
+    this.anchor=an;
+}
+update();
+function update(){
+    ctx.clearRect(0,0,myCanvas.width,myCanvas.height);
+    ctx.strokeStyle = "purple";
+    ctx.beginPath();
+    for(var i=0;i<constraints.length;i++){
+        ctx.moveTo(nodes[constraints[i][0]].x,nodes[constraints[i][0]].y);
+        ctx.lineTo(nodes[constraints[i][1]].x,nodes[constraints[i][1]].y);
+    }
+    ctx.stroke();
+    for(var i=0;i<nodes.length;i++){
+        ctx.fillRect(nodes[i].x-1,nodes[i].y-1,2,2);
+            if(nodes[i].anchor==false){
+                nodes[i].x+=nodes[i].xv;
+                nodes[i].y+=nodes[i].yv;
+                nodes[i].yv+=gravitationalcons;
+                if(Math.abs(nodes[i].yv)>2) nodes[i].yv-=Math.sign(nodes[i].yv)*airdrag;
+                if(Math.abs(nodes[i].yv)<=2 && Math.abs(nodes[i].yv)>=airdrag*0.05) nodes[i].yv-=Math.sign(nodes[i].yv)*airdrag*0.05;
+                if(Math.abs(nodes[i].xv)>2) nodes[i].xv-=Math.sign(nodes[i].xv)*airdrag;
+                if(Math.abs(nodes[i].xv)<=2 && Math.abs(nodes[i].xv)>=airdrag*0.05) nodes[i].xv-=Math.sign(nodes[i].xv)*airdrag*0.04;
+            }
+    }
+    for(var i=0;i<constraints.length;i++){
+        var n1=nodes[constraints[i][0]];
+        var n2=nodes[constraints[i][1]];
+        data=distance(n1.x,n1.y,n2.x,n2.y);
+        if(snap && data[0]>rubf){
+            constraints.splice(i,1);
+            i--;
+            continue;
+        }
+        nodes[constraints[i][0]].xv+=data[1]*gumstr;
+        nodes[constraints[i][0]].yv+=data[2]*gumstr;
+        nodes[constraints[i][1]].xv+=data[3]*gumstr;
+        nodes[constraints[i][1]].yv+=data[4]*gumstr;
+        if(click==2){
+            if(data[0]+2>Math.sqrt(Math.pow(mx-n1.x,2)+Math.pow(my-n1.y,2))+Math.sqrt(Math.pow(mx-n2.x,2)+Math.pow(my-n2.y,2))){
+                constraints.splice(i,1);
+                i--;
+                continue;
+            }
+        }
+    }
+    setTimeout(update,40);
+}
+function distance(x1,y1,x2,y2){
+    var dist = Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2));
+    var rebounce_x1 = 1/(Math.abs(x2-x1)+Math.abs(y2-y1))*(x2-x1)*(dist-10)/stress;
+    var rebounce_y1 = 1/(Math.abs(x2-x1)+Math.abs(y2-y1))*(y2-y1)*(dist-10)/stress;
+    var rebounce_x2 = 1/(Math.abs(x1-x2)+Math.abs(y1-y2))*(x1-x2)*(dist-10)/stress;
+    var rebounce_y2 = 1/(Math.abs(x1-x2)+Math.abs(y1-y2))*(y1-y2)*(dist-10)/stress;
+    return [dist,rebounce_x1,rebounce_y1,rebounce_x2,rebounce_y2];
+}
+myCanvas.onmousedown = function(e) {
+    mx = e.clientX - myCanvas.offsetLeft;
+    my = e.clientY - myCanvas.offsetTop;
+    click = e.button;
+};
+myCanvas.onmousemove = function(e) {
+    mx = e.clientX - myCanvas.offsetLeft;
+    my = e.clientY - myCanvas.offsetTop;
+};
+myCanvas.onmouseup = function(e) {
+    mx = -20;
+    my = -20;
+    click = -1;
+};
+document.addEventListener('contextmenu', event => event.preventDefault());
+function disabledEvent(e){
+    if (e.stopPropagation){
+        e.stopPropagation();
+    } 
+    else if (window.event){
+        window.event.cancelBubble = true;
+    }
+    e.preventDefault();
+        return false;
+    }
+</script>
+</body>
+</html> 

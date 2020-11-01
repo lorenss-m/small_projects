@@ -1,0 +1,1085 @@
+<HTML>
+<head>
+<title> fontgen </title>
+<style>
+    #name,input[type=button]{
+        width: 100%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        box-sizing: border-box;
+        border: none;
+        background-color: #3CBC8D;
+        color: white;
+    }
+    ::placeholder {
+        color: white;
+    }
+    input:focus{
+        outline:none;
+    }
+    canvas{
+        position:relative;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    input[type=text]{
+        border: none;
+        width:20px;
+        background-color: #3CBC8D;
+        color: white;
+        appearance: textfield;
+    }
+    #node{
+        position:relative;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    select{
+        border: none;
+        width:150px;
+        padding: 8px 10px;
+        background-color: #3CBC8D;
+        color: white;
+    }
+</style>
+</head>
+<body>
+<canvas id=myCanvas width=800 height=600 style="background-color: white;"> 
+</canvas>
+<select id="Font">
+    <option value="" disabled selected>Select The Font</option>
+    <option>Modern</option>
+    <option>Dots</option>
+    <option>Circles</option>
+    <option>Experimental</option>
+    <option>Lines</option>
+    <option>8-bit</option>
+</select>
+<input type="text" id="name" value="" placeholder="Write Here!">
+<!--
+<div id="node">
+    <table border = "1" id = "nodes">
+        <tr><td><input value="1" type="text" maxlength="1" id="n1"></td><td><input value="1" type="text" maxlength="1" id="n2"></td><td><input value="1" type="text" maxlength="1" id="n3"></td></tr>
+        <tr><td><input value="2" type="text" maxlength="1" id="n4"></td><td><input value="2" type="text" maxlength="1" id="n5"></td><td><input value="2" type="text" maxlength="1" id="n6"></td></tr>
+        <tr><td><input value="3" type="text" maxlength="1" id="n7"></td><td><input value="3" type="text" maxlength="1" id="n8"></td><td><input value="3" type="text" maxlength="1" id="n9"></td></tr>
+        <tr><td><input value="2" type="text" maxlength="1" id="n10"></td><td><input value="2" type="text" maxlength="1" id="n11"></td><td><input value="2" type="text" maxlength="1" id="n12"></td></tr>
+        <tr><td><input value="3" type="text" maxlength="1" id="n13"></td><td><input value="3" type="text" maxlength="1" id="n14"></td><td><input value="3" type="text" maxlength="1" id="n15"></td></tr>
+    </table>
+</div>
+<input type = "button" onclick = "createNode()" value = "Create Node">
+!-->
+<script>
+var ctx = myCanvas.getContext("2d");
+var letters = [
+    ["A",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,1,1],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["B",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,1,0],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["C",
+    [
+    [1,1,1],
+    [1,0,0],
+    [1,0,0],
+    [1,0,0],
+    [1,1,1]
+    ]
+    ],
+    ["D",
+    [
+    [1,1,0],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["E",
+    [
+    [1,1,1],
+    [1,0,0],
+    [1,1,1],
+    [1,0,0],
+    [1,1,1]
+    ]
+    ],
+    ["F",
+    [
+    [1,1,1],
+    [1,0,0],
+    [1,1,1],
+    [1,0,0],
+    [1,0,0]
+    ]
+    ],
+    ["G",
+    [
+    [1,1,1],
+    [1,0,0],
+    [1,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["H",
+    [
+    [1,0,1],
+    [1,0,1],
+    [1,1,1],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["I",
+    [
+    [1,1,1],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [1,1,1]
+    ]
+    ],
+    ["J",
+    [
+    [1,1,1],
+    [0,0,1],
+    [0,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["K",
+    [
+    [1,0,1],
+    [1,0,1],
+    [1,1,0],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["L",
+    [
+    [1,0,0],
+    [1,0,0],
+    [1,0,0],
+    [1,0,0],
+    [1,1,1]
+    ]
+    ],
+    ["M",
+    [
+    [3,0,3],
+    [1,2,1],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["N",
+    [
+    [1,0,1],
+    [3,0,1],
+    [1,2,1],
+    [1,0,3],
+    [1,0,1]
+    ]
+    ],
+    ["O",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["P",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,1,1],
+    [1,0,0],
+    [1,0,0]
+    ]
+    ],
+    ["Q",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,0,1],
+    [1,2,1],
+    [1,1,3]
+    ]
+    ],
+    ["R",
+    [
+    [1,1,1],
+    [1,0,1],
+    [3,1,1],
+    [1,2,0],
+    [1,0,3]
+    ]
+    ],
+    ["S",
+    [
+    [1,1,1],
+    [1,0,0],
+    [0,1,0],
+    [0,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["T",
+    [
+    [1,1,1],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0]
+    ]
+    ],
+    ["U",
+    [
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["V",
+    [
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [0,1,0]
+    ]
+    ],
+    ["W",
+    [
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,2,1],
+    [3,0,3]
+    ]
+    ],
+    ["X",
+    [
+    [1,0,1],
+    [3,0,3],
+    [0,2,0],
+    [3,0,3],
+    [1,0,1]
+    ]
+    ],
+    ["Y",
+    [
+    [1,0,1],
+    [3,0,3],
+    [0,2,0],
+    [0,4,0],
+    [0,1,0]
+    ]
+    ],
+    ["Z",
+    [
+    [1,1,1],
+    [0,0,3],
+    [0,2,0],
+    [3,0,0],
+    [1,1,1]
+    ]
+    ],
+    ["a",
+    [
+    [0,0,0],
+    [0,2,4],
+    [3,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["b",
+    [
+    [1,0,0],
+    [4,2,0],
+    [1,0,3],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["c",
+    [
+    [0,0,0],
+    [0,2,4],
+    [3,0,0],
+    [1,0,0],
+    [1,1,1]
+    ]
+    ],
+    ["d",
+    [
+    [0,0,1],
+    [0,2,4],
+    [3,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["e",
+    [
+    [0,0,0],
+    [1,1,1],
+    [1,2,4],
+    [1,0,0],
+    [1,1,1]
+    ]
+    ],
+    ["f",
+    [
+    [0,2,4],
+    [3,0,0],
+    [1,1,1],
+    [1,0,0],
+    [1,0,0]
+    ]
+    ],
+    ["g",
+    [
+    [0,0,0],
+    [0,2,4],
+    [3,0,1],
+    [0,2,4],
+    [1,1,1]
+    ]
+    ],
+    ["h",
+    [
+    [1,0,0],
+    [1,0,0],
+    [1,1,1],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["i",
+    [
+    [0,5,0],
+    [0,0,0],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0]
+    ]
+    ],
+    ["j",
+    [
+    [0,5,0],
+    [0,0,0],
+    [0,1,0],
+    [0,1,0],
+    [1,1,0]
+    ]
+    ],
+    ["k",
+    [
+    [1,0,0],
+    [1,0,1],
+    [1,1,0],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["l",
+    [
+    [1,0,0],
+    [1,0,0],
+    [1,0,0],
+    [1,0,0],
+    [0,1,0]
+    ]
+    ],
+    ["m",
+    [
+    [0,0,0],
+    [3,0,3],
+    [1,2,1],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["n",
+    [
+    [0,0,0],
+    [1,1,0],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1]
+    ]
+    ],
+    ["o",
+    [
+    [0,0,0],
+    [1,1,1],
+    [1,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["p",
+    [
+    [0,0,0],
+    [1,1,1],
+    [1,0,1],
+    [1,1,1],
+    [4,0,0]
+    ]
+    ],
+    ["q",
+    [
+    [0,0,0],
+    [1,1,1],
+    [1,0,1],
+    [1,2,1],
+    [1,1,3]
+    ]
+    ],
+    ["r",
+    [
+    [0,0,0],
+    [1,1,1],
+    [1,0,0],
+    [1,0,0],
+    [1,0,0]
+    ]
+    ],
+    ["s",
+    [
+    [0,0,0],
+    [1,1,1],
+    [3,0,0],
+    [0,2,0],
+    [1,1,3]
+    ]
+    ],
+    ["t",
+    [
+    [0,1,0],
+    [1,1,1],
+    [0,1,0],
+    [0,1,0],
+    [0,1,1]
+    ]
+    ],
+    ["u",
+    [
+    [0,0,0],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["v",
+    [
+    [0,0,0],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [0,1,0]
+    ]
+    ],
+    ["w",
+    [
+    [0,0,0],
+    [1,0,1],
+    [1,0,1],
+    [1,2,1],
+    [3,0,3]
+    ]
+    ],
+    ["x",
+    [
+    [0,0,0],
+    [1,0,1],
+    [3,0,3],
+    [0,2,0],
+    [3,0,3]
+    ]
+    ],
+    ["y",
+    [
+    [0,0,0],
+    [1,0,1],
+    [3,0,3],
+    [0,2,0],
+    [1,4,0]
+    ]
+    ],
+    ["z",
+    [
+    [0,0,0],
+    [1,1,1],
+    [0,0,3],
+    [0,2,0],
+    [3,1,1]
+    ]
+    ],
+    [" ",
+    [
+    [0,0,0],
+    [0,0,0],
+    [0,0,0],
+    [0,0,0],
+    [0,0,0]
+    ]
+    ],
+    ["0",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,0,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["1",
+    [
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [0,1,0]
+    ]
+    ],
+    ["2",
+    [
+    [1,1,1],
+    [1,0,1],
+    [0,0,3],
+    [0,2,0],
+    [3,1,1]
+    ]
+    ],
+    ["3",
+    [
+    [1,1,1],
+    [0,0,1],
+    [0,1,1],
+    [0,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["4",
+    [
+    [1,0,1],
+    [1,0,1],
+    [1,1,1],
+    [0,0,1],
+    [0,0,1]
+    ]
+    ],
+    ["5",
+    [
+    [1,1,1],
+    [1,0,0],
+    [1,1,1],
+    [0,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["6",
+    [
+    [1,1,1],
+    [1,0,0],
+    [1,1,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["7",
+    [
+    [1,1,1],
+    [0,0,1],
+    [0,1,1],
+    [0,0,1],
+    [0,0,1]
+    ]
+    ],
+    ["8",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,1,1],
+    [1,0,1],
+    [1,1,1]
+    ]
+    ],
+    ["9",
+    [
+    [1,1,1],
+    [1,0,1],
+    [1,1,1],
+    [0,0,1],
+    [1,1,1]
+    ]
+    ],
+    [".",
+    [
+    [0,0,0],
+    [0,0,0],
+    [0,0,0],
+    [0,0,0],
+    [0,5,0]
+    ]
+    ],
+    [",",
+    [
+    [0,0,0],
+    [0,0,0],
+    [0,0,0],
+    [0,1,0],
+    [0,1,0]
+    ]
+    ],
+    ["!",
+    [
+    [0,1,0],
+    [0,1,0],
+    [0,1,0],
+    [0,0,0],
+    [0,5,0]
+    ]
+    ],
+    ["?",
+    [
+    [1,1,1],
+    [0,0,1],
+    [0,1,0],
+    [0,0,0],
+    [0,5,0]
+    ]
+    ],
+    [";",
+    [
+    [0,0,0],
+    [0,5,0],
+    [0,0,0],
+    [0,1,0],
+    [1,0,0]
+    ]
+    ],
+    [":",
+    [
+    [0,0,0],
+    [0,5,0],
+    [0,0,0],
+    [0,0,0],
+    [0,5,0]
+    ]
+    ],
+    ["'",
+    [
+    [0,1,0],
+    [0,1,0],
+    [0,0,0],
+    [0,0,0],
+    [0,0,0]
+    ]
+    ],
+    ["-",
+    [
+    [0,0,0],
+    [0,0,0],
+    [1,1,1],
+    [0,0,0],
+    [0,0,0]
+    ]
+    ],
+    ["_",
+    [
+    [0,0,0],
+    [0,0,0],
+    [0,0,0],
+    [0,0,0],
+    [1,1,1]
+    ]
+    ],
+    ["+",
+    [
+    [0,0,0],
+    [0,4,0],
+    [1,1,4],
+    [0,4,0],
+    [0,0,0]
+    ]
+    ],
+    ["=",
+    [
+    [0,0,0],
+    [1,1,1],
+    [0,0,0],
+    [1,1,1],
+    [0,0,0]
+    ]
+    ],
+    ["*",
+    [
+    [0,4,0],
+    [1,1,4],
+    [0,4,0],
+    [0,0,0],
+    [0,0,0]
+    ]
+    ],
+    ["/",
+    [
+    [0,0,1],
+    [0,0,3],
+    [0,2,0],
+    [3,0,0],
+    [1,0,0]
+    ]
+    ],
+    ["(",
+    [
+    [0,2,0],
+    [3,0,0],
+    [1,0,0],
+    [3,0,0],
+    [0,2,0]
+    ]
+    ],
+    [")",
+    [
+    [0,2,0],
+    [0,0,3],
+    [0,0,1],
+    [0,0,3],
+    [0,2,0]
+    ]
+    ],
+    ['"',
+    [
+    [1,0,1],
+    [1,0,1],
+    [0,0,0],
+    [0,0,0],
+    [0,0,0]
+    ]
+    ]
+    ];
+var word = document.getElementById("name").value;
+var startx = 50;
+var starty = 50;
+var nodes = [];
+var currentFont = 0;
+var ringsize = 20;
+var size = 0;
+ctx.strokeStyle = "black";
+ctx.fillStyle = "black";
+reset();
+function createNode(){
+    nodes.push([]);
+    for(z = 0;z < 5;z++){
+        nodes[nodes.length - 1].push([]);
+        for(z0 = 1;z0 < 4;z0++){
+            nodes[nodes.length - 1][z].push(document.getElementById("n" + (z*3 + z0)).value);
+        }
+    }
+    startx+=size*4;
+    for(z0 = 0;z0 < nodes[nodes.length - 1].length;z0++){
+        for(z1 = 0;z1 < nodes[nodes.length - 1][z0].length;z1++){
+            font(currentFont,nodes[nodes.length - 1][z0][z1]);
+        }
+    }
+}
+function reset(){
+    ctx.clearRect(0,0,myCanvas.width,myCanvas.height)
+    size = 0;
+    startx = 50;
+    starty = 50;
+    word = document.getElementById("name").value;
+    nodes = [];
+    setNodes();
+}
+function setNodes(){
+    for(z = 0;z < word.length;z++){
+        for(z0 = 0;z0 < letters.length;z0++){
+            if(letters[z0][0] == word.charAt(z)){
+                nodes.push(letters[z0][1]);
+                break;
+            }
+        }
+    }
+    generate();
+}
+function generate(){
+    if(word.length < 50){
+        if(word.length == 1){
+            size = myCanvas.width / 7;
+        }
+        else{
+            size = myCanvas.width / (word.length*4.5);
+        }
+    }
+    else{
+        size = myCanvas.width / (50*4.5);
+    }
+    for(z = 0;z < nodes.length;z++){
+        for(z0 = 0;z0 < nodes[z].length;z0++){
+            for(z1 = 0;z1 < nodes[z][z0].length;z1++){
+                if(nodes[z][z0][z1] != 0){
+                    font(currentFont,nodes[z][z0][z1]);
+                }
+            }
+        }
+        if(startx < 735){
+            startx+=size*4;
+        }
+        else{
+            startx = 30;
+            starty += 30;
+        }
+    }
+}
+function font(font,type){
+    switch(font){
+        case 1:
+            ctx.fillRect(startx + z1*size,starty + z0*size,size/4,size/4);
+        break;
+        case 4:
+            ctx.fillRect(startx + z1*size,starty + z0*size,size/2,size*1.05);
+        break;
+        case 5:
+            ctx.fillRect(startx + z1*size,starty + z0*size,size*1.05,size*1.05);
+        break;
+        case 3:
+            if(nodes[z][z0][z1 + 1] != 0){
+                ctx.beginPath();
+                ctx.moveTo(startx + z1*size,starty + z0*size);
+                ctx.lineTo(startx + (z1+1)*size,starty + z0*size);
+                ctx.stroke();
+            }
+            if(nodes[z][z0][z1] != 0){
+                ctx.beginPath();
+                ctx.moveTo(startx + z1*size,starty + z0*size);
+                ctx.lineTo(startx + z1*size,starty + (z0+1)*size);
+                ctx.stroke();
+            }
+        break;
+        case 0:
+            switch(type){
+                case 1:
+                    var pr = 0;
+                    if(nodes[z][z0][z1 + 1] != 0 && nodes[z][z0][z1 + 1] != 2 && nodes[z][z0][z1 + 1] != null){
+                        ctx.beginPath();
+                        ctx.moveTo(startx + z1*size,starty + z0*size);
+                        ctx.lineTo(startx + (z1+1)*size,starty + z0*size);
+                        ctx.stroke();
+                        pr++;
+                    }
+                    if(z0 != 4 && nodes[z][z0 + 1][z1] != 0 && nodes[z][z0 + 1][z1] != 2){
+                        ctx.beginPath();
+                        ctx.moveTo(startx + z1*size,starty + z0*size);
+                        ctx.lineTo(startx + z1*size,starty + (z0+1)*size);
+                        ctx.stroke();
+                        pr++;
+                    }
+                    if(pr == 0){
+                        for(z2 = -1;z2 < 2;z2+=2){
+                            if(z0+z2 > 0 && z0+z2 < 5 && nodes[z][z0 + z2][z1 + 1] == 1){
+                                ctx.beginPath();
+                                ctx.moveTo(startx + z1*size,starty + z0*size);
+                                ctx.lineTo(startx + (z1+1)*size,starty + (z0+z2)*size);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                break;
+                case 2:
+                    for(z2 = -1;z2 < 2;z2+=2){
+                        if(z0+z2 >= 0 && z0+z2 < 5 && nodes[z][z0 + z2][z1 + 1] == 3){
+                            ctx.beginPath();
+                            ctx.moveTo(startx + z1*size,starty + z0*size);
+                            ctx.lineTo(startx + (z1+1)*size,starty + (z0+z2)*size);
+                            ctx.stroke();
+                        }
+                        if(z0+z2 >= 0 && z0+z2 < 5 && nodes[z][z0 + z2][z1 - 1] == 3){
+                            ctx.beginPath();
+                            ctx.moveTo(startx + z1*size,starty + z0*size);
+                            ctx.lineTo(startx + (z1-1)*size,starty + (z0+z2)*size);
+                            ctx.stroke();
+                        }
+                    }
+                    if(nodes[z][z0][z1 + 1] == 4){
+                        ctx.beginPath();
+                        ctx.moveTo(startx + z1*size,starty + z0*size);
+                        ctx.lineTo(startx + (z1+1)*size,starty + z0*size);
+                        ctx.stroke();
+                    }
+                    if(z0 != 4 && nodes[z][z0 + 1][z1] == 4){
+                        ctx.beginPath();
+                        ctx.moveTo(startx + z1*size,starty + z0*size);
+                        ctx.lineTo(startx + z1*size,starty + (z0+1)*size);
+                        ctx.stroke();
+                    }
+                break;
+                case 3:
+                    var pr = 0;
+                    if(nodes[z][z0][z1 + 1] == 1 || nodes[z][z0][z1 + 1] == 3){
+                        ctx.beginPath();
+                        ctx.moveTo(startx + z1*size,starty + z0*size);
+                        ctx.lineTo(startx + (z1+1)*size,starty + z0*size);
+                        ctx.stroke();
+                    }
+                    if(z0 != 4 && (nodes[z][z0 + 1][z1] == 1 || nodes[z][z0 + 1][z1] == 3)){
+                        ctx.beginPath();
+                        ctx.moveTo(startx + z1*size,starty + z0*size);
+                        ctx.lineTo(startx + z1*size,starty + (z0+1)*size);
+                        ctx.stroke();
+                    }
+                break;
+                case 4:
+                    if(z0 != 4 && nodes[z][z0 + 1][z1] == 1){
+                        ctx.beginPath();
+                        ctx.moveTo(startx + z1*size,starty + z0*size);
+                        ctx.lineTo(startx + z1*size,starty + (z0+1)*size);
+                        ctx.stroke();
+                    }
+                break;
+                case 5:
+                    ctx.beginPath();
+                    ctx.arc(startx + z1*size,starty + z0*size + size, Math.abs(1.5*size/ringsize),0,Math.PI*2);
+                    ctx.stroke();
+                break;
+            }
+        break;
+        case 2:
+            switch(type){
+                case 1:
+                    var pr = 0;
+                    if(nodes[z][z0][z1 + 1] != 0 && nodes[z][z0][z1 + 1] != 2 && nodes[z][z0][z1 + 1] != null){
+                        for(x = -1.5;x < 2;x+=0.5){
+                            ctx.beginPath();
+                            ctx.arc(startx + z1*size + ((x+1.5)*size/3),starty + z0*size, Math.abs(x*size/ringsize),0,Math.PI*2);
+                            ctx.fill();
+                        }
+                        pr++;
+                    }
+                    if(z0 != 4 && nodes[z][z0 + 1][z1] != 0 && nodes[z][z0 + 1][z1] != 2){
+                        for(x = -1.5;x < 2;x+=0.5){
+                            ctx.beginPath();
+                            ctx.arc(startx + z1*size,starty + z0*size + ((x+1.5)*size/3), Math.abs(x*size/ringsize),0,Math.PI*2);
+                            ctx.fill();
+                        }
+                        pr++;
+                    }
+                    if(pr == 0){
+                        for(z2 = -1;z2 < 2;z2+=2){
+                            if(z0+z2 > 0 && z0+z2 < 5 && nodes[z][z0 + z2][z1 + 1] == 1){
+                                for(x = -1.5;x < 2;x+=0.5){
+                                    ctx.beginPath();
+                                    ctx.arc(startx + z1*size + ((x+1.5)*size/3),starty + z0*size + (z2*(x+1.5)*size/3), Math.abs(x*size/ringsize),0,Math.PI*2);
+                                    ctx.fill();
+                                }
+                            }
+                        }
+                    }
+                break;
+                case 2:
+                    for(z2 = -1;z2 < 2;z2+=2){
+                        if(z0+z2 >= 0 && z0+z2 < 5 && nodes[z][z0 + z2][z1 + 1] == 3){
+                            for(x = -1.5;x < 2;x+=0.5){
+                                ctx.beginPath();
+                                ctx.arc(startx + z1*size + ((x+1.5)*size/3),starty + z0*size + (z2*(x+1.5)*size/3), Math.abs(x*size/ringsize),0,Math.PI*2);
+                                ctx.fill();
+                            }
+                        }
+                        if(z0+z2 >= 0 && z0+z2 < 5 && nodes[z][z0 + z2][z1 - 1] == 3){
+                            for(x = -1.5;x < 2;x+=0.5){
+                                ctx.beginPath();
+                                ctx.arc(startx + z1*size + (-1*(x+1.5)*size/3),starty + z0*size + (z2*(x+1.5)*size/3), Math.abs(x*size/ringsize),0,Math.PI*2);
+                                ctx.fill();
+                            }
+                        }
+                    }
+                    if(nodes[z][z0][z1 + 1] == 4){
+                        for(x = -1.5;x < 2;x+=0.5){
+                            ctx.beginPath();
+                            ctx.arc(startx + z1*size + ((x+1.5)*size/3),starty + z0*size, Math.abs(x*size/ringsize),0,Math.PI*2);
+                            ctx.fill();
+                        }
+                    }
+                    if(z0 != 4 && nodes[z][z0 + 1][z1] == 4){
+                        for(x = -1.5;x < 2;x+=0.5){
+                            ctx.beginPath();
+                            ctx.arc(startx + z1*size,starty + z0*size + ((x+1.5)*size/3), Math.abs(x*size/ringsize),0,Math.PI*2);
+                            ctx.fill();
+                        }
+                    }
+                break;
+                case 3:
+                    var pr = 0;
+                    if(nodes[z][z0][z1 + 1] == 1 || nodes[z][z0][z1 + 1] == 3){
+                        for(x = -1.5;x < 2;x+=0.5){
+                            ctx.beginPath();
+                            ctx.arc(startx + z1*size + ((x+1.5)*size/3),starty + z0*size, Math.abs(x*size/ringsize),0,Math.PI*2);
+                            ctx.fill();
+                        }
+                    }
+                    if(z0 != 4 && (nodes[z][z0 + 1][z1] == 1 || nodes[z][z0 + 1][z1] == 3)){
+                        for(x = -1.5;x < 2;x+=0.5){
+                            ctx.beginPath();
+                            ctx.arc(startx + z1*size,starty + z0*size + ((x+1.5)*size/3), Math.abs(x*size/ringsize),0,Math.PI*2);
+                            ctx.fill();
+                        }
+                    }
+                break;
+                case 4:
+                    if(z0 != 4 && nodes[z][z0 + 1][z1] == 1){
+                        for(x = -1.5;x < 2;x+=0.5){
+                            ctx.beginPath();
+                            ctx.arc(startx + z1*size,starty + z0*size + ((x+1.5)*size/3), Math.abs(x*size/ringsize),0,Math.PI*2);
+                            ctx.fill();
+                        }
+                    }
+                break;
+                case 5:
+                    ctx.beginPath();
+                    ctx.arc(startx + z1*size,starty + z0*size, Math.abs(1.5*size/ringsize),0,Math.PI*2);
+                    ctx.fill();
+                break;
+            }
+        break;
+    }
+}
+document.getElementById("name").addEventListener('input', function() {
+    reset();
+});
+document.addEventListener('DOMContentLoaded', function(){
+    var selectEle = document.getElementById('Font');
+    selectEle.addEventListener('change', function(item){
+        currentFont = selectEle.selectedIndex - 1;
+        reset();
+    });
+});
+</script>
+</body>
+</html> 

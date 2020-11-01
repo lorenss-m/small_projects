@@ -1,0 +1,294 @@
+<HTML>
+<head>
+<title> balllllls </title>
+<style>
+        canvas{
+            position:absolute;
+            top:30px;
+            left:0px;
+        }
+</style>
+</head>
+
+<body>
+<canvas id=myCanvas width=350 height=350 style="background-color: black;"> </canvas>
+
+<p id="out" style="color: blue;"></p>
+<script src="/oplo/vectorlib/"></script>
+<script>
+var ctx = myCanvas.getContext("2d");
+myCanvas.width=window.innerWidth;
+myCanvas.height=window.innerHeight-30;
+function getRandomBrightColor(){
+    return "hsl(" + 360 * Math.random() + ',' + (100) + '%,' + (50) + '%)';
+}
+class Vector{
+    #x;
+    #y;
+    constructor(xi,yi){
+        this.#x=xi;
+        this.#y=yi;
+    }
+    //getters
+    get mag(){
+        return Math.sqrt(this.#x**2+this.#y**2);
+    }
+    get magsq(){
+        return this.#x**2+this.#y**2;
+    }
+    get X(){
+        return this.#x;
+    }
+    set X(ix){
+        this.#x=ix;
+    }
+    get Y(){
+        return this.#y;
+    }
+    set Y(iy){
+        this.#y=iy;
+    }
+    get angle(){
+        return Math.atan2(this.#y,this.#x);
+    }
+    get unitVector(){
+        var mag=this.mag;
+        return new Vector(this.#x/mag,this.#y/mag);
+    }
+    //functions
+    angleTo(a){
+        var aa=a.angle;
+        var ba=this.angle;
+        return (Math.abs(aa-ba)>Math.abs(ba-aa)?(ba-aa):(aa-ba));
+    }
+    add(a){
+        this.#x+=a.X;
+        this.#y+=a.Y;
+        return this;
+    }
+    sub(a){
+        this.#x-=a.X;
+        this.#y-=a.Y;
+        return this;
+    }
+    pointMultiply(a){
+        this.#x*=a.X;
+        this.#y*=a.Y;
+        return this;
+    }
+    pointDivide(a){
+        this.#x/=a.X;
+        this.#y/=a.Y;
+        return this;
+    }
+    scalarMultiply(a){
+        this.#x*=a;
+        this.#y*=a;
+        return this;
+    }
+    scalarDivide(a){
+        this.#x/=a;
+        this.#y/=a;
+        return this;
+    }
+    doNotChange(){
+        return new Vector(this.#x,this.#y);
+    }
+    rotate90C(){
+        [this.#x,this.#y]=[this.#y,-this.#x];
+        return this;
+    }
+    rotate90CC(){
+        [this.#x,this.#y]=[-this.#y,this.#x];
+        return this;
+    }
+    rotateRad(angle){//positive goes CC
+        [this.#x,this.#y]=[this.#x*Math.cos(angle)-this.#y*Math.sin(angle),this.#x*Math.sin(angle)+this.#y*Math.cos(angle)];
+        return this;
+    }
+    projectOnto(b){
+        return this.mag*Math.cos(this.angleTo(b));
+    }
+    Set(a){
+        this.#x=a.X;
+        this.#y=a.Y;
+    }
+    equals(b){
+        return (b.X==this.#x) && (b.Y==this.#y);
+    }
+    reflect(normal){
+        this.scalarMultiply(-1);
+        this.rotateRad(this.angleTo(normal)*2);
+        return this;
+    }
+    //static functions
+    static dotProduct(a,b){
+        return a.mag*b.mag*a.angleTo(b);
+    }
+    static lerp(a,b,t){
+        return a.doNotChange().scalarMultiply(1 - t).add(b.doNotChange().scalarMultiply(t));
+    }
+    static lerpI(a,b,o){
+        //console.log(o.doNotChange().sub(a));
+        //console.log(b);
+        //console.log(b.doNotChange().sub(a));
+        return o.doNotChange().sub(a).pointDivide(b.doNotChange().sub(a)).X;
+        
+    }
+    static max(...vectors){
+        let tmp = new Vector(-Infinity,-Infinity);
+       vectors.forEach((v)=>{
+            if(v.X>tmp.X)tmp.X=v.X;
+            if(v.Y>tmp.Y)tmp.Y=v.Y;
+        });
+        return tmp;
+    }
+    static min(...vectors){
+        let tmp = new Vector(Infinity,Infinity);
+       vectors.forEach((v)=>{
+            if(v.X<tmp.X)tmp.X=v.X;
+            if(v.Y<tmp.Y)tmp.Y=v.Y;
+        });
+        return tmp;
+    }
+    //the gray area
+    static random(min, max){
+        return new Vector(Math.random()*(max.X-min.X)+min.X,Math.random()*(max.Y-min.Y)+min.Y);
+    }
+    //Converter functions
+    toString(){
+        return `X:${this.#x} ; Y:${this.#y}`
+    }
+    toArray(){
+        return [this.#x,this.#y];
+    }
+    //constants
+    static get down(){
+        return new Vector(0,-1);
+    }
+    static get up(){
+        return new Vector(0,1);
+    }
+    static get right(){
+        return new Vector(1,0);
+    }
+    static get left(){
+        return new Vector(-1,0);
+    }
+    static get zero(){
+        return new Vector(0,0);
+    }
+}
+
+class ball{
+    velocity;//Vector
+    location;//Vector
+    radius=6;//float
+    mass=1;//float
+    disabled=false;
+    hue=Math.random()*360;
+    brightness=50;
+    constructor(in_l,in_v,in_r,in_m){
+        this.velocity=in_v;
+        this.location=in_l;
+        if(in_r)this.radius=in_r;
+        if(in_m)this.mass=in_m;
+    }
+    toString(){
+        return `V:(${this.velocity});L:(${this.location});R:${this.radius};M:${this.mass}`;
+    }
+}
+//var a= new Vector(1,4);
+//var b= new Vector(2,3);
+var density=0.1111111111111111;//how many per 10px
+var gravity=new Vector(0,0);
+var push=Vector.zero;//new Vector(0.01,-0.3);
+var push2=Vector.zero;//new Vector(-0.3,0);
+var loss=0;
+density=10/density;
+var balls=[];
+var speed_T=1.5;
+var speed_sum=0;
+for(var i=25;i<myCanvas.width;i+=density){
+    for(var i2=25;i2<myCanvas.height;i2+=density){
+        balls.push(
+            new ball(
+                new Vector(i,i2),
+                Vector.random(
+                    {X:-speed_T,Y:-speed_T},
+                    {X:speed_T,Y:speed_T}
+                )
+            )
+        );
+    }
+}
+function loop(){
+    speed_sum=0;
+    balls.forEach(function(a,index){
+        speed_sum+=a.velocity.mag;
+        for(var i=index+1;i<balls.length;i++){
+            let b=balls[i];
+            let to_impact=balls[i].location.doNotChange().sub(a.location);
+            if(to_impact.magsq<=(a.radius+balls[i].radius)**2){
+                a.brightness=50;
+                balls[i].brightness=50;
+                let unit=to_impact.unitVector;
+                let a_c=unit.doNotChange().scalarMultiply(a.velocity.projectOnto(unit));
+                unit.scalarMultiply(-1);
+                let b_c=unit.doNotChange().scalarMultiply(balls[i].velocity.projectOnto(unit));
+                let dif=a_c.sub(b_c).scalarMultiply(1-loss);
+                a.velocity.sub(dif);
+                balls[i].velocity.add(dif);
+                a.location.add(unit);
+                balls[i].location.sub(unit);
+            }
+        }
+        if(a.location.X+a.radius>myCanvas.width || a.location.X-a.radius<0){
+            a.velocity.X=-a.velocity.X;
+            if(a.location.X<a.radius)a.location.X++;
+            if(a.location.X>myCanvas.width-a.radius)a.location.X--;
+        }
+        if(a.location.Y+a.radius>myCanvas.height || a.location.Y-a.radius<0){
+            a.velocity.Y=-a.velocity.Y;
+            if(a.location.Y<a.radius)a.location.Y++;
+            if(a.location.Y>myCanvas.height-a.radius)a.location.Y--;
+        }
+        a.velocity.add(gravity);
+        if(a.location.X>myCanvas.width*0.97){
+            a.velocity.add(push);
+        }
+        if(a.location.Y<myCanvas.height*0.2){
+            a.velocity.add(push2);
+        }
+        a.location.add(a.velocity);
+    });
+    document.getElementById("out").innerHTML="Summed Energy:"+speed_sum;
+    setTimeout(loop,0);
+}
+setTimeout(loop,0);
+function draw(){
+    ctx.clearRect(0,0,myCanvas.width,myCanvas.height);
+    balls.forEach((a,i)=>{//move everyone
+        //if(a.brightness>10)a.brightness-=3;
+        ctx.fillStyle=`hsl(${a.hue},50%,${a.brightness}%)`;
+        ctx.beginPath();
+        ctx.arc(a.location.X,a.location.Y,a.radius,0,2*Math.PI);
+        ctx.fill();
+    });
+    ctx.beginPath();
+    
+    ctx.fill();
+    setTimeout(draw, 50);
+}
+setTimeout(draw, 100);
+var keys={};
+window.addEventListener('keydown', (event)=>{
+    keys[event.code]=true;
+}, true);
+window.addEventListener('keyup', (event)=>{
+    keys[event.code]=false;
+}, true);
+</script>
+
+</body>
+</html> 

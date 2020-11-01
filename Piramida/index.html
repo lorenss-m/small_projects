@@ -1,0 +1,648 @@
+<HTML>
+<head>
+<title> piramida </title>
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<style media="screen">
+body{
+  background-color: #ffffff;
+}
+canvas{
+  background-color: transparent;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+button{
+  background-color: transparent;
+  position: relative;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  float: left;
+  font-family: 'Montserrat';
+  font-size: 2vw;
+  transition: 0.5s all ease;
+  width: 100%;
+}
+button:hover{
+  color: rgba(255, 255, 255, 0.9);
+}
+button:focus{
+  outline: none;
+}
+#buttonContainer{
+  padding: 10px 10px;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 20%;
+  height: 30%;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Montserrat';
+  font-size: 1.5vw;
+  width: 100%;
+  text-align: center;
+  margin: 5px;
+}
+input[type="number"]:focus{
+  outline: none;
+}
+div.dc{
+  text-align: center;
+  pointer-events: none;
+  margin: 5px;
+  background-color: transparent;
+  position: relative;
+  color: rgba(255, 255, 255, 0.6);
+  border: none;
+  font-family: 'Montserrat';
+  font-size: 1.5vw;
+}
+#stats{
+  padding: 10px 10px;
+  position: absolute;
+  top: 40%;
+  left: 0px;
+  width: 40%;
+  height: 30%;
+  color: rgba(255, 255, 255, 0.6);
+  border: none;
+  font-family: 'Montserrat';
+  font-size: 1vw;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id=Canvas width=800 height=800> </canvas>
+<canvas id=izkl></canvas>
+<div id = "buttonContainer">
+  <button onClick="unfold()" class = "bt">Izklāt</button>
+  <button onClick="reset()" class = "bt">Atiestatīt</button>
+  <div class="dc">Pamata šķautnes garums:</div><input id="pamsk" type="number" max="80" min="0" value="3">
+  <div class="dc">Pamata regulāra daudzstūra stūru skaits:</div><input id="ngon" type="number" max="1000" min="0" value="4">
+  <div class="dc">Piramīdas augstums:</div><input id="hei" type="number" max="80" min="0" value="">
+  <div class="dc">----vai----</div>
+  <div class="dc">Sānu šķautnes garums:</div><input id="sidsk" type="number" max="80" min="0" value="5">
+  <button onClick="apply()" class = "bt">Ģenerēt</button>
+</div>
+<div id = "stats">
+  Augstums: ~<span class = "stat" id = "hh"></span> <br>
+  Sāna šķautnes garums: ~<span class = "stat" id = "ssg"></span> <br>
+  Pamata šķautnes garums: ~<span class = "stat" id = "psg"></span> <br>
+  Apotēma: ~<span class = "stat" id = "apot"></span> <br>
+  Pamatā ievilktās r. l. rādiuss: ~<span class = "stat" id = "irr"></span> <br>
+  Ap pamatu apvilktās r. l. rādiuss: ~<span class = "stat" id = "arr"></span> <br>
+  Pamata Laukums: ~<span class = "stat" id = "pamatL"></span> <br>
+  1 Sānu skaldnes laukums: ~<span class = "stat" id = "skaldnesL"></span> <br>
+  Sānu laukums: ~<span class = "stat" id = "sanuL"></span> <br>
+  Kopējais Laukums: ~<span class = "stat" id = "kopL"></span> <br>
+  Tilpums: ~<span class = "stat" id = "tilp"></span>
+</div>
+<script>
+
+const ctx = Canvas.getContext("2d");
+const itx = izkl.getContext("2d");
+
+document.body.style.backgroundColor = getRandomBrightColor(-0.2, 0.6);
+/*
+for(i = 0; i < document.getElementsByClassName("bt").length; i++){
+  document.getElementsByClassName("bt")[i].style.color = getRandomBrightColor();
+}*/
+
+Canvas.width = document.body.clientWidth;
+Canvas.height = document.body.clientHeight;
+izkl.width = document.body.clientWidth / 4;
+izkl.height = document.body.clientHeight * 2 / 5;
+var count = 4;
+
+var mala = 3;
+var sanSkautne = 5;
+
+var radius = skautMalaToRH(sanSkautne, mala, count).radi;
+var height = skautMalaToRH(sanSkautne, mala, count).heigh;
+var ievilktaisR;
+var scale = (Canvas.width - height)/700;
+
+ctx.transform(1, 0, 0, -1, Canvas.width/2, Canvas.height/2);
+itx.transform(1, 0, 0, -1, izkl.width/2, izkl.height/2);
+
+var rot = {
+  x: 0,
+  y: 0,
+  z: 0,
+  dx: 0,
+  dy: 0,
+  dz: 0
+};
+var kamera = {
+  x: 0,
+  y: -10,
+  z: 0,
+  focal: 300
+};
+
+var punkti = [
+  //new punkts(10, 0, 10)
+];
+var skautnes = [];
+var skaldnes = [];
+var jumts=[];
+
+
+genPunkti(count, radius, height);
+genSkautnes();
+genSkaldnes();
+
+izklajums();
+statGen();
+console.log("Ja piramīdas pamata aprādiuss ir "+radius+", piramīdas pamats ir regulārs "+count+"-stūris, un augstums ir "+height+", tad:");
+console.log("Šīs piramīdas tilpums ir "+tilpums()+".");
+console.log("Piramīdas sānu laukums ir "+sanuLaukums()+", pamata laukums ir "+laukumsReg(skaldnes[0])+
+", un kopējais laukums ir "+kopLaukums()+".");
+
+function skautMalaToRH(skautnesGarums, malasGarums, sturi){
+    let an = Math.PI * 2 / sturi;
+    let apvr = malasGarums / (2 * Math.sin(an / 2));
+    let th = Math.sqrt(skautnesGarums**2 - apvr**2);
+    let rad = malasGarums / (2 * Math.tan(an / 2));
+    return {
+        heigh: th,
+        radi: rad
+    };
+}
+
+function getSS(h, malasGarums, sturi){
+    let an = Math.PI * 2 / sturi;
+    let apvr = malasGarums / (2 * Math.sin(an / 2));
+    return Math.sqrt(h**2 + apvr**2);
+}
+
+function apply(){
+  count=Number(ngon.value);
+  sanSkautne=Number(sidsk.value);
+  mala=Number(pamsk.value);
+  radius=skautMalaToRH(sanSkautne, mala, count).radi;
+  height=skautMalaToRH(sanSkautne, mala, count).heigh;
+  if(!isNaN(Number(hei.value)) && hei.value != 0 && hei.value != ""){
+    height = hei.value;
+    sanSkautne = getSS(height, mala, count);
+    radius=skautMalaToRH(sanSkautne, mala, count).radi;
+  }
+  if(isNaN(radius) || isNaN(height)){
+    alert("Šāda figūra neeksistē!");
+  }
+  else{
+    punkti = [
+      //new punkts(10, 0, 10)
+    ];
+    skautnes = [];
+    skaldnes = [];
+    jumts=[];
+    kamera.y = radius > height ? -radius - 5 : -height - 5;
+    genPunkti(count, radius, height);
+    genSkautnes();
+    genSkaldnes();
+    izklajums();
+    statGen();
+  }
+}
+
+function statGen(){
+  pamatL.innerHTML = Math.round(laukumsReg(skaldnes[0])*10000)/10000;
+  skaldnesL.innerHTML = Math.round(laukumsTri(skaldnes[1])*10000)/10000;
+  sanuL.innerHTML = Math.round(sanuLaukums()*10000)/10000;
+  kopL.innerHTML = Math.round(kopLaukums()*10000)/10000;
+  tilp.innerHTML = Math.round(tilpums()*10000)/10000;
+  arr.innerHTML = Math.round(lietas(skaldnes[1]).ar*10000)/10000;
+  irr.innerHTML = Math.round(lietas(skaldnes[1]).ir*10000)/10000;
+  hh.innerHTML = Math.round(lietas(skaldnes[1]).h*10000)/10000;
+  apot.innerHTML = Math.round(lietas(skaldnes[1]).ap*10000)/10000;
+  ssg.innerHTML = sanSkautne;
+  psg.innerHTML = mala;
+}
+function skautne(a,b){
+  this.punkti = [a,b];
+}
+
+function skaldne(a){
+  this.punkti = a;
+  this.color=getRandomBrightColor(0, 0.3);
+}
+
+function punkts(x, y, z){
+  this.x = x;
+  this.y = y;
+  this.z = z;
+  this.cx=0;
+  this.cz=0;
+  this.ox=x;
+  this.oy=y;
+  this.oz=z;
+}
+
+function izklajums(){
+  itx.clearRect(-izkl.width/2,-izkl.height/2,izkl.width,izkl.height);
+  itx.save();
+  let tw = document.body.clientWidth / 4;
+  let th = document.body.clientHeight * 2 / 5;
+  let scaleIz = tw < th ? tw*0.94 / ((radius + height)*2) : th*0.9 / ((radius + height)*2);
+  itx.scale(scaleIz, scaleIz);
+  itx.fillStyle = skaldnes[0].color;
+  itx.beginPath();
+  itx.moveTo(skaldnes[0].punkti[0].x, skaldnes[0].punkti[0].y);
+  for(i = 1; i < skaldnes[0].punkti.length; i++){
+    itx.lineTo(skaldnes[0].punkti[i].x, skaldnes[0].punkti[i].y);
+  }
+  itx.fill();
+  itx.transform(1, 0, 0, -1, 0, 0);
+  itx.fillStyle = "white";
+  itx.font = "0.7px Montserrat";
+  let dx = skaldnes[0].punkti[0].x - skaldnes[0].punkti[1].x;
+  let dy = skaldnes[0].punkti[0].y - skaldnes[0].punkti[1].y;
+  itx.fillText(mala, skaldnes[0].punkti[0].x + dx/2 + 0.1, skaldnes[0].punkti[0].y + dy/2 - 1.6);
+  itx.transform(1, 0, 0, -1, 0, 0);
+  let m = skaldnes.length - 1;
+  let n = Math.sqrt((skaldnes[0].punkti[0].x - skaldnes[0].punkti[1].x)**2 + (skaldnes[0].punkti[0].y - skaldnes[0].punkti[1].y)**2);
+  ievilktaisR = Math.tan((90*(m - 2)/m)*Math.PI/180) * n / 2;
+  for(i = 1; i < skaldnes.length; i++){
+    let hx = (skaldnes[i].punkti[1].x+skaldnes[i].punkti[0].x)/2/ievilktaisR*(ievilktaisR+Math.sqrt(height**2+ievilktaisR**2))//Math.sin((i - 1) * an + an/2) * Math.sqrt(ievilktaisR**2 + height**2);
+    let hy = (skaldnes[i].punkti[1].y+skaldnes[i].punkti[0].y)/2/ievilktaisR*(ievilktaisR+Math.sqrt(height**2+ievilktaisR**2))//Math.cos((i - 1) * an + an/2) * Math.sqrt(ievilktaisR**2 + height**2);
+    itx.fillStyle = skaldnes[i].color;
+    itx.beginPath();
+    itx.moveTo(skaldnes[i].punkti[0].x, skaldnes[i].punkti[0].y);
+    itx.lineTo(skaldnes[i].punkti[1].x, skaldnes[i].punkti[1].y);
+    itx.lineTo(hx, hy);
+    itx.closePath();
+    itx.fill();
+  }
+  itx.restore();
+}
+
+function genPunkti(n, rad, h){
+  let an = Math.PI * 2 / n;
+  for(i = 0; i < n; i++){
+    punkti.push(new punkts(Math.sin(an * i) * rad, Math.cos(an * i) * rad, -h/2));//pamatam
+    punkti.push(new punkts(Math.sin(an * i) * rad, Math.cos(an * i) * rad, -h/2));//saniem
+    jumts.push(punkti[punkti.length-1]);
+  }
+  punkti.push(new punkts(Math.sin(an * 0) * rad, Math.cos(an * 0) * rad, -h/2));//dup. sanam
+  jumts.push(punkti[punkti.length-1]);
+  punkti.push(new punkts(0, 0, h/2));//virsotne
+  jumts.push(punkti[punkti.length-1]);
+}
+
+var augstums = punkti[punkti.length - 1].z;
+
+function genSkautnes(){
+  for(i = 3; i < punkti.length-1; i+=2){
+    skautnes.push(new skautne(punkti[i - 3], punkti[i - 1]));//pa pamatu
+    skautnes.push(new skautne(punkti[i - 2], punkti[i]));//trijsturi
+    skautnes.push(new skautne(punkti[i - 2], punkti[punkti.length - 1]));//tirjst. ar virs.
+    //skautnes.push(new skautne(punkti[i - 1], punkti[punkti.length - 1]));
+  }
+
+  skautnes.push(new skautne(punkti[punkti.length - 1 - 3], punkti[0]));//1. pamats ar ped. pamatu
+
+  skautnes[skautnes.length-1].tag=mala;
+  skautnes.push(new skautne(punkti[punkti.length - 1 - 2], punkti[punkti.length - 1 - 1]));//pedejais trijsturis
+  skautnes.push(new skautne(punkti[punkti.length - 1 - 2], punkti[punkti.length - 1]));//ped. punkts ar virs.
+  skautnes.push(new skautne(punkti[punkti.length - 1 - 1], punkti[punkti.length - 1]));//dup. punkts ar virs.
+  skautnes[skautnes.length-1].tag=sanSkautne;
+}
+
+function genSkaldnes(){
+  skaldnes.push(new skaldne([]));
+  for(i = 3; i < punkti.length-1; i+=2){
+    skaldnes[0].punkti.push(punkti[i - 3]);
+    skaldnes.push(new skaldne([punkti[i-2], punkti[i], punkti[punkti.length - 1]]));
+  }
+  skaldnes[0].punkti.push(punkti[punkti.length - 1 - 3]);
+  skaldnes.push(new skaldne([punkti[punkti.length - 1 - 2], punkti[punkti.length - 1 - 1], punkti[punkti.length - 1]]));
+}
+
+function laukumsReg(sk){
+  let m = sk.punkti.length;
+  let n = mala;
+  let ievilktaisR = Math.tan((90*(m - 2)/m)*Math.PI/180) * n / 2;
+  return m * ievilktaisR * n / 2;
+}
+
+function laukumsTri(sk){
+  let m = skaldnes[0].punkti.length;
+  let n = mala;
+  let ievilktaisR = Math.tan((90*(m - 2)/m)*Math.PI/180) * n / 2;
+  let apotema = Math.sqrt(height**2 + ievilktaisR**2);
+  return apotema * n / 2;
+}
+
+function lietas(sk){
+  let m = skaldnes[0].punkti.length;
+  let n = mala;
+  let an = Math.PI * 2 / count;
+  let apvr = mala / (2 * Math.sin(an / 2));
+  let th = Math.sqrt(sanSkautne**2 - apvr**2);
+  let ievilktaisR = Math.tan((90*(m - 2)/m)*Math.PI/180) * n / 2;
+  let apotema = Math.sqrt(height**2 + ievilktaisR**2);
+  return{
+    ap: apotema,
+    ir: ievilktaisR,
+    ar: apvr,
+    h: th
+  };
+}
+
+function tilpums(){
+  return laukumsReg(skaldnes[0]) * height / 3;
+}
+
+function sanuLaukums(){
+  return laukumsTri(skaldnes[1])*(skaldnes.length-1);
+}
+
+function kopLaukums(){
+  return sanuLaukums() + laukumsReg(skaldnes[0]);
+}
+
+function mm(a,b){
+  var out=[];
+  for(var i=0;i<a.length;i++){
+    out.push([]);
+    for(var i2=0;i2<b[0].length;i2++){
+      out[i][i2]=0;
+      for(var i3=0;i3<b.length;i3++){
+        out[i][i2]+=a[i][i3]*b[i3][i2];
+      }
+    }
+  }
+  return out;
+}
+function xR(a){
+  return [
+    [1,0,0],
+    [0,Math.cos(a),Math.sin(a)],
+    [0,-Math.sin(a),Math.cos(a)]
+  ];
+}
+function yR(a){
+  return [
+    [Math.cos(a),0,Math.sin(a)],
+    [0,1,0],
+    [-Math.sin(a),0,Math.cos(a)]
+  ];
+}
+function zR(a){
+  return [
+    [Math.cos(a),Math.sin(a),0],
+    [-Math.sin(a),Math.cos(a),0],
+    [0,0,1]
+  ];
+}
+function draw(){
+  ctx.clearRect(-Canvas.width/2,Canvas.height/2,Canvas.width,-Canvas.height);
+  ctx.fillRect(-1,-1,2,2);
+  punkti.forEach(function(a){
+    var dx=a.x-kamera.x;
+    var dy=a.y-kamera.y;
+    var dz=a.z-kamera.z;
+    if(dy>0){
+      //var dist=Math.sqrt(Math.sqrt(dx**2+dy**2)**2+dz**2);
+      var cx=dx/dy*kamera.focal * scale;
+      var cz=dz/dy*kamera.focal * scale;
+      ctx.fillRect(cx-1,cz-1,2,2);
+      a.cx=cx;
+      a.cz=cz;
+    }
+  });
+  ctx.beginPath();
+  skautnes.forEach(function(a){
+    ctx.moveTo(a.punkti[0].cx,a.punkti[0].cz);
+    ctx.lineTo(a.punkti[1].cx,a.punkti[1].cz);
+    if(a.tag){
+      ctx.font="15px Montserrat";
+      ctx.fillStyle="black";
+      ctx.transform(1, 0, 0, -1,0,0);
+      ctx.fillText(a.tag,a.punkti[0].cx/2+a.punkti[1].cx/2,-a.punkti[0].cz/2-a.punkti[1].cz/2);
+      ctx.transform(1, 0, 0, -1,0,0);
+    }
+  });
+  ctx.stroke();
+  for(var i=skaldnes.length-1;i>=0;i--){
+    var a=skaldnes[i];
+    //var v1={x:a.punkti[1].x-a.punkti[0].x,z:a.punkti[1].z-a.punkti[0].z};
+    //var v2={x:a.punkti[2].x-a.punkti[0].x,z:a.punkti[2].z-a.punkti[0].z};
+    //var ysum=v1.x*v2.z-v1.z*v2.x;
+    //var ys=0;
+    //a.punkti.forEach(function(b){ys+=b.y});
+    //if(a.punkti.length>3){ysum*=-1;}
+    //if(a.punkti.length>3 && Math.sign(ysum)==-Math.sign(ys)){ysum*=-1;}
+    //if(ysum<0){
+      ctx.fillStyle=a.color;
+      ctx.beginPath();
+      ctx.moveTo(a.punkti[a.punkti.length-1].cx,a.punkti[a.punkti.length-1].cz);
+      a.punkti.forEach(function(b){
+        ctx.lineTo(b.cx,b.cz);
+      });
+      ctx.fill();
+    //}
+  }
+}
+draw();
+var safe=false;
+function update(){
+  if(safe){
+    rot.y+=rot.dy;
+    rot.x+=rot.dx;
+    rot.z+=rot.dz;
+  }
+  punkti.forEach(function(a){
+    if(safe){
+      var new_xyz=mm(xR(rot.x),[[a.ox],[a.oy],[a.oz]]);
+      new_xyz=mm(zR(rot.z),new_xyz);
+    }else{
+      var new_xyz=mm(xR(rot.dx),[[a.x],[a.y],[a.z]]);
+      new_xyz=mm(zR(rot.dz),new_xyz);
+      new_xyz=mm(yR(rot.dy),new_xyz);
+    }
+
+    //new_xyz=mm(yR(rot.y),new_xyz);
+    //var new_xyz=mm([[1,0,0],[0,1,0],[0,0,1.1]],[[a.x],[a.y],[a.z]]);
+    a.x=new_xyz[0][0];
+    a.y=new_xyz[1][0];
+    a.z=new_xyz[2][0];
+    //console.log(new_xyz);
+  });
+  draw();
+  setTimeout(update,10);
+}
+update();
+function rotateAll(matrix){
+  punkti.forEach(function(a){
+    var new_xyz=mm(matrix,[[a.x],[a.y],[a.z]]);
+    a.x=new_xyz[0][0];
+    a.y=new_xyz[1][0];
+    a.z=new_xyz[2][0];
+  });
+}
+function unfold(){
+  good=false;
+  reset();
+  let n = Math.sqrt((skaldnes[0].punkti[0].x - skaldnes[0].punkti[1].x)**2 + (skaldnes[0].punkti[0].y - skaldnes[0].punkti[1].y)**2);
+  var len=Math.atan2(n/2,Math.sqrt(height**2+ievilktaisR**2))*2;
+  rotateAll(zR(-(Math.PI*2/count)/2));
+  var ang=Math.PI/2+Math.abs(Math.atan2(Math.abs(ievilktaisR),Math.abs(height)));
+  var k=Math.floor(ang/(Math.PI/180));
+  var l=ang%(Math.PI/180);
+  var done=false;
+  //console.log(ang);
+  var virso=jumts[jumts.length-1];
+  raise();
+  function raise(){
+    if(k!=0){
+      for(var i=0;i<jumts.length;i++){
+        var new_xyz=mm(xR(Math.PI/180),[[jumts[i].x-jumts[0].x],[jumts[i].y-jumts[0].y],[jumts[i].z-jumts[0].z]]);
+        jumts[i].x=new_xyz[0][0]+jumts[0].x;
+        jumts[i].y=new_xyz[1][0]+jumts[0].y;
+        jumts[i].z=new_xyz[2][0]+jumts[0].z;
+      }
+      k--;
+      setTimeout(raise,10);
+    }else{
+      for(var i=0;i<jumts.length;i++){
+        var new_xyz=mm(xR(l),[[jumts[i].x-jumts[0].x],[jumts[i].y-jumts[0].y],[jumts[i].z-jumts[0].z]]);
+        jumts[i].x=new_xyz[0][0]+jumts[0].x;
+        jumts[i].y=new_xyz[1][0]+jumts[0].y;
+        jumts[i].z=new_xyz[2][0]+jumts[0].z;
+      }
+      setTimeout(continueun,10);
+    }
+  }
+  function continueun(){
+    ang=len;
+    var ang2=Math.atan2(Math.abs(jumts[2].z-jumts[1].z),Math.abs(jumts[2].x-jumts[1].x));
+
+    for(var i=0;i<punkti.length;i++){
+      var new_xyz=mm(zR(ang/2),[[punkti[i].x-punkti[punkti.length-1].x],[punkti[i].y-punkti[punkti.length-1].y],[punkti[i].z-punkti[punkti.length-1].z]]);
+      punkti[i].x=new_xyz[0][0]+punkti[punkti.length-1].x;
+      punkti[i].y=new_xyz[1][0]+punkti[punkti.length-1].y;
+      punkti[i].z=new_xyz[2][0]+punkti[punkti.length-1].z;
+    }
+    //for(var p=2;p<jumts.length-2;p++){
+      setTimeout(unfold2,100);
+    //}
+    var p=2;
+    function unfold2(){
+      ang=len;
+      ang2=Math.atan2(Math.abs(jumts[p].z-jumts[p-1].z),Math.abs(jumts[p].x-jumts[p-1].x));
+      for(var i=p;i<jumts.length-1;i++){
+        var new_xyz=mm(yR(ang2),[[jumts[i].x-jumts[p-1].x],[jumts[i].y-jumts[p-1].y],[jumts[i].z-jumts[p-1].z]]);
+        jumts[i].x=new_xyz[0][0]+jumts[p-1].x;
+        jumts[i].y=new_xyz[1][0]+jumts[p-1].y;
+        jumts[i].z=new_xyz[2][0]+jumts[p-1].z;
+      }
+      for(var i=0;i<punkti.length;i++){
+        var new_xyz=mm(zR(ang),[[punkti[i].x-punkti[punkti.length-1].x],[punkti[i].y-punkti[punkti.length-1].y],[punkti[i].z-punkti[punkti.length-1].z]]);
+        punkti[i].x=new_xyz[0][0]+punkti[punkti.length-1].x;
+        punkti[i].y=new_xyz[1][0]+punkti[punkti.length-1].y;
+        punkti[i].z=new_xyz[2][0]+punkti[punkti.length-1].z;
+      }
+      p++;
+      if(p<jumts.length-1){
+        setTimeout(unfold2,100);
+      }else{
+        //console.log(Math.sqrt((jumts[0].x-jumts[jumts.length-1].x)**2+(jumts[0].y-jumts[jumts.length-1].y)**2));
+        //console.log(Math.sqrt((jumts[jumts.length-2].x-jumts[jumts.length-1].x)**2+(jumts[jumts.length-2].y-jumts[jumts.length-1].y)**2));
+        for(var i=0;i<punkti.length;i++){
+          var new_xyz=mm(zR(-len*(p-2)-len/2),[[punkti[i].x-punkti[punkti.length-1].x],[punkti[i].y-punkti[punkti.length-1].y],[punkti[i].z-punkti[punkti.length-1].z]]);
+          punkti[i].x=new_xyz[0][0]+punkti[punkti.length-1].x;
+          punkti[i].y=new_xyz[1][0]+punkti[punkti.length-1].y-ievilktaisR;
+          punkti[i].z=new_xyz[2][0]+punkti[punkti.length-1].z+height/2;
+        }
+        rotateAll(xR(Math.PI/4*3));
+        good=true;
+      }
+    }
+
+  }
+}
+function reset(){
+  for(var i=0;i<punkti.length;i++){
+    punkti[i].x=punkti[i].ox;
+    punkti[i].y=punkti[i].oy;
+    punkti[i].z=punkti[i].oz;
+  }
+}
+//console.log(Math.sqrt(Math.sqrt((jumts[0].ox-virso.x)**2+(jumts[0].oy-virso.y)**2)**2+(jumts[0].oz-virso.z)**2));}
+
+function getRandomBrightColor(lmod, tmod){
+    var r, g, b;
+    var h=Math.random()*0.07 + 0.55;
+    var s=1;
+    var l=0.5 + lmod;
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function (p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    return "rgba("+Math.round(r * 255)+","+Math.round(g * 255)+","+Math.round(b * 255)+"," + tmod + ")";
+}
+var good=true;
+function handleKeyDown(event){
+  if(good){
+    if(event.keyCode == 81){
+        rot.dy = -Math.PI/180;
+    }
+    else if(event.keyCode == 69){
+        rot.dy = Math.PI/180;
+    }
+    if(event.keyCode == 87){
+        rot.dx = -Math.PI/180;
+    }
+    else if(event.keyCode == 83){
+        rot.dx = Math.PI/180;
+    }
+    if(event.keyCode == 68){
+        rot.dz = Math.PI/180;
+    }
+    else if(event.keyCode == 65){
+        rot.dz = -Math.PI/180;
+    }
+  }
+}
+function handleKeyUp(event){
+    if(event.keyCode == 81 || event.keyCode == 69){
+        rot.dy = 0;
+    }
+    if(event.keyCode == 87 || event.keyCode == 83){
+        rot.dx = 0;
+    }
+    if(event.keyCode == 68 || event.keyCode == 65){
+        rot.dz = 0;
+    }
+}
+window.addEventListener('keydown', handleKeyDown, true);
+window.addEventListener('keyup', handleKeyUp, true);
+</script>
+</body>

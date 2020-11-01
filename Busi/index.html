@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Space+Mono" rel="stylesheet">
+<link href="styles.css" rel="stylesheet">
+<title>OPLoRD</title>
+</head>
+<body id="body">
+<!--<div id = "imageContainer">
+  <img src="Images/LV_stars.png" id = "LVstars">
+</div>-->
+<canvas id="bottomUpdate" width="4000"></canvas>
+<canvas id="middle" width="4000"></canvas>
+<canvas id="densee" width="4000"></canvas>
+<canvas id="stopC" width="4000"></canvas>
+<canvas id="topUpdate" width="4000"></canvas>
+<canvas id="overlay" width="4000"></canvas>
+<div class="center" id="timeContainer">
+  <div class="center" id="timeDisplay">00:00</div>
+  <div class="center" id="dayDisplay"></div>
+  <div class="center" id="podDisplay">POD: Night</div>
+<input class="center" type="range" min="10" max="200" value="10" class="slider" id="timeSlider">
+</div>
+<button class="center" onclick="togo();" id="Togg">Izslēgt blīvuma karti</button>
+<video class="center" id = "loader" width="2200" height="3600" loop>
+  <source src="Videos/Animation_load_1_1.mp4" type="video/mp4">
+Your browser does not support video playback.
+</video>
+<div class = "narvC" id = "n1">
+  <div id = "nv1">
+  Reklāma šeit!
+  </div>
+  <!--<img class = "narvesen" src="http://reklama.narvesen.lv/berta2/liels/liels.gif">-->
+</div>
+<div class = "narvC" id = "n2">
+  <div id = "nv2">
+  Reklāma šeit!
+  </div>
+  <!--<img class = "narvesen" id = "nv2" src="http://reklama.narvesen.lv/berta2/liels/liels.gif">-->
+</div>
+<!--<img height="100%" src="Images/Rollerino.gif">-->
+<div id="console2"></div>
+<script src="recycler.js"></script>
+<script src="density.js"></script>
+<script src="drawer.js"></script>
+<script src="bus.js"></script>
+<script src="Stops.js"></script>
+<script src="daycycle.js"></script>
+<script>
+  //getting background image
+  var latv=new Image();
+  latv.src="Images/LV_2_lv_st_19.png";
+
+  //scale constants
+  const width = 8.25;
+  const height = 3.08;
+  const left = 20.41;
+  const ttop = 58.44;
+
+  //declaring globbal variables
+  var ads = true;
+  var stops;
+  var down=false;
+  var mid=left+width/2;
+  var acth;
+  var actw;
+  var busses=[];
+  var zoom=100;
+  var pr=0;
+  var stackSize=0;
+  var interval;
+  var loaderTimeout = false;
+  var lvfilter = "brightness(100%)";//filter for canvas - day/night
+  var Console = new Console2();
+  var consoleText = [];
+  var mwdw;//middle.width/width
+  var mhdh;//middle.height/height
+
+  function Console2(){//Console - textbox on the right
+    this.log = function(e){
+      if(consoleText.length > 40) consoleText.shift();
+      consoleText.push("[ " + timeDisplay.innerHTML + " ] " + e + "<br>");
+      console2.innerHTML = consoleText.join("");
+      console2.scrollTop = console2.scrollHeight;
+    }
+  }
+  function EyeOpener(Ob, index){//shows all busstops
+    var l=coorToCanvas(Ob.degE,Ob.degN);
+    stops[index].x=l[0];
+    stops[index].y=l[1];
+    //ctx.fillRect(l[0]-2,l[1]-2,4,4);
+  }
+  function init(){//initializes canvas and busstops
+    mtx=middle.getContext("2d");
+    stx=stopC.getContext("2d");
+    btx=bottomUpdate.getContext("2d");
+    ttx=topUpdate.getContext("2d");
+    otx=overlay.getContext("2d");
+    otx.lineWidth = 20;
+    otx.strokeStyle = "black";
+    dtx=densee.getContext("2d");
+    middle.width=window.innerWidth-10;
+    middle.height=window.innerHeight;
+    if((window.innerWidth/window.innerHeight)<(latv.width/latv.height)){
+      acth=latv.height*(middle.width/latv.width);
+      actw=middle.width;
+    }else{
+      acth=middle.height;
+      actw=latv.width*(middle.height/latv.height);
+    }
+    middle.height=acth;
+    bottomUpdate.height=acth;
+    topUpdate.height=acth;
+    middle.width=actw;
+    bottomUpdate.width=actw;
+    topUpdate.width=actw;
+    stopC.height=acth;
+    stopC.width=actw;
+    overlay.height=acth;
+    overlay.width=actw;
+    densee.width=actw;
+    densee.height=acth;
+    mwdw=middle.width/width;
+    mhdh=middle.height/height;
+    recycle();//@recycler.js  Gets all files needed and repurpouses them
+    waiter();
+  }
+  function waiter(){//function that waits until the files are fetched
+    if(done==false){//@recycler.js
+      setTimeout(waiter,10);
+      return;
+    }
+    stops=reA;//@recycler.js
+    loader.style.opacity = "0";
+    n1.style.opacity = "0";
+    n2.style.opacity = "0";
+    loaderTimeout = false;
+    Console.log("Sveiki! Šeit redzēsiet visus izbraucošos autobusus!");
+    body.style.transition = "background-color 5s ease";
+    setTimeout(function(){//when lodaer stops fading out
+      loader.parentNode.removeChild(loader);
+      bottomUpdate.style.opacity = "1";
+      //imageContainer.style.opacity = "1";
+      overlay.style.opacity = "1";
+      middle.style.opacity = "1";
+      middle.style.transition = "filter 50s ease";
+      topUpdate.style.opacity = "1";
+      densee.style.opacity = "1";
+      stopC.style.opacity = "1";
+      timeContainer.style.opacity = "1";
+      console2.style.opacity = "1";
+      Togg.style.opacity = "1";
+      console2.style.width = (document.body.clientWidth - middle.width - 14) + "px";
+      console2.style.height = (window.innerHeight - 14) + "px";
+      //imageContainer.style.width = middle.width;
+      //LVstars.style.width = middle.width;
+    }, 800);
+    setTimeout(function(){//sets body bg transition for normal cycle
+      body.style.transition = "background-color 50s ease";
+    }, 5000);
+    mtx.drawImage(latv,CanvasD.x,CanvasD.y,middle.width,middle.height);
+
+    stops.forEach(EyeOpener);
+    stops.forEach(StopDraw);
+    busses.forEach(coorInit);
+    //busses
+    /*
+    for(var i=0;i<1500;i++){
+      busses.push(new Bus([stops[random(0,8000)],stops[random(0,8000)],stops[random(0,8000)]]));
+    }
+    */
+    updateTime();
+    //event listeners
+    overlay.addEventListener("mousewheel", resize, false);
+    overlay.addEventListener("DOMMouseScroll", resize, false);
+    overlay.addEventListener("mouseup", function(){down=false;}, false);
+    overlay.addEventListener("mousedown", function(e){down=true;prX=e.clientX;prY=e.clientY;}, false);
+    overlay.addEventListener("mousemove", move, false);
+    overlay.addEventListener("click", click, false);
+
+    //starts update with 60fps
+    interval=setInterval(update,1000/60);
+  }
+
+  function random(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function update(){//main update
+    stackSize++;
+    if(stackSize>=4){return;}
+    ttx.clearRect(0,0,actw,acth);
+    ttx.fillStyle="red";
+    busses.forEach(BusUpdate);//@bus.js
+    stackSize--;
+    //setTimeout(update,10);
+  }
+
+  function fadeIn(){//loader fade at the start
+    loader.style.opacity = "1";
+    if(ads){
+      n1.style.opacity = "1";
+      n2.style.opacity = "1";
+    }
+    tryLoaderPlay();
+    setTimeout(init, 300);
+  }
+
+  function tryLoaderPlay(){//tries playing loader animation
+    try{
+      document.getElementById("loader").play();
+    }
+    catch(e){}
+    if(loaderTimeout){
+      setTimeout(tryLoaderPlay, 2000);
+    }
+  }
+
+  window.addEventListener('load', fadeIn, false);
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<HTML>
+    <head>
+        <title> berlin_noise </title>
+    </head>
+
+    <body>
+        <canvas id=canvas width=600 height=600 style="background-color: black;"> </canvas>
+
+        <script>
+        var ctx = canvas.getContext("2d");
+        var vectorG=[];
+        function randomV(){
+            var ang=Math.random()*2*Math.PI;
+            return {x:Math.cos(ang),y:Math.sin(ang),a:ang,r:(Math.random()-0.5)*0.3};
+        }
+        function dot(a,b){
+          return a.x*b.x+a.y*b.y;
+        }
+        function lerp(x1, x2, w){
+            return x1 + smoothStep(w) * (x2 - x1);
+        }
+        function smoothStep(x) { //Normal smoothstep
+            return x * x * (3 - 2 * x); //-2 * Math.pow(x, 3) + 3 * Math.pow(x, 2);
+            //I know about x * x * (3 - 2 * x);
+          }
+        var id = ctx.createImageData(canvas.width,canvas.height); // only do this once per page
+        var d  = id.data;
+        var tilcx=5;
+        var tilcy=5;
+        var tilex=(canvas.width/tilcx);
+        var tiley=(canvas.height/tilcy);
+        var diagonal=Math.sqrt(tilex**2,tiley**2);
+         for(var i=0;i<tilcx+1;i++){
+             vectorG.push([]);
+            for(var i2=0;i2<tilcy+1;i2++){
+                 vectorG[i].push(randomV());
+             }
+         }
+        function gen(){
+          console.time();
+
+          for(var i=0;i<canvas.width;i++){
+              for(var i2=0;i2<canvas.height;i2++){
+                var gx=Math.floor(i/tilex);
+                var gy=Math.floor(i2/tiley);
+                  var dirv=[
+                    {
+                      x:(i-gx*tilex)/diagonal,
+                      y:(i2-gy*tiley)/diagonal
+                    },
+                    {
+                      x:(i-(gx+1)*tilex)/diagonal,
+                      y:(i2-(gy)*tiley)/diagonal
+                    },
+                    {
+                      x:(i-(gx)*tilex)/diagonal,
+                      y:(i2-(gy+1)*tiley)/diagonal
+                    },
+                    {
+                      x:(i-(gx+1)*tilex)/diagonal,
+                      y:(i2-(gy+1)*tiley)/diagonal
+                    }
+                  ];
+                  var values=[dot(dirv[0],vectorG[gx][gy]),dot(dirv[1],vectorG[gx+1][gy]),dot(dirv[2],vectorG[gx][gy+1]),dot(dirv[3],vectorG[gx+1][gy+1])];
+                  var ui=lerp(values[0],values[1],(i%tilex)/tilex);
+                  var li=lerp(values[2],values[3],(i%tilex)/tilex);
+                  var fi=(lerp(ui,li,(i2%tiley)/tiley)+0.5)*255;
+                  d[4*(i+i2*canvas.width)]=(Math.sin(fi/255*Math.PI*2)+1)*255/2;
+                  d[4*(i+i2*canvas.width)+1]=(Math.sin(fi/255*Math.PI*2+4/3*Math.PI)+1)*255/2;
+                  d[4*(i+i2*canvas.width)+2]=(Math.sin(fi/255*Math.PI*2+2/3*Math.PI)+1)*255/2;
+                  d[4*(i+i2*canvas.width)+3]=255;
+              }
+          }
+          ctx.putImageData( id, 0, 0 );
+          console.timeEnd();
+          
+          for(var i=0;i<vectorG.length;i++){
+            for(var i2=0;i2<vectorG[i].length;i2++){
+              vectorG[i][i2].a+=vectorG[i][i2].r;
+              vectorG[i][i2].x=Math.cos(vectorG[i][i2].a);
+              vectorG[i][i2].y=Math.sin(vectorG[i][i2].a);
+            }
+          }
+
+          setTimeout(gen,0);
+        }
+        gen();
+        </script>
+
+    </body>
+</html>

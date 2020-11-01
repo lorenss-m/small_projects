@@ -1,0 +1,168 @@
+<HTML>
+<head>
+<title> texture_2 </title>
+<style>
+    body{
+        margin: 0;
+    }
+    canvas{
+        position: absolute;
+        top: 0px;
+        left: 0px;
+    }
+    #st{
+        z-index: 1;
+        position:absolute;
+        bottom:0px;
+        left:0px;
+        color:none;
+    }
+    .loader{
+        z-index: 1;
+        position:relative;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        top: 40%;
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid blue;
+        border-right: 16px solid green;
+        border-bottom: 16px solid red;
+        border-left: 16px solid pink;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 2s linear infinite;
+    }
+    
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+</style>
+</head>
+<body>
+<div class="loader" id = "ld"></div>
+<div id = "st"></div>
+<canvas id=game width=300 height=300 style="background-color: white;"> 
+</canvas>
+<script>
+var ctx = game.getContext("2d"); 
+var field = [];
+var colors = [];
+var y = 0, x = 0;
+var colorC = 5;
+var agg = 50;
+var tolerance = 0;
+window.addEventListener('load', gen, false);
+
+function random(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+function randomColor(start, end){
+    var o = Math.round, r = Math.random;
+    return 'rgb(' + o(r()*end + start) + ',' + o(r()*end + start) + ',' + o(r()*end + start) + ')';
+}
+
+function gen(){
+    canvas = document.getElementById("game");
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
+    for(i = 0; i < colorC; i++){
+        colors.push(randomColor(agg,255));
+        if(i == 0){
+            document.getElementById("st").innerHTML += "[";
+        }
+        if(i < colorC-1){
+            document.getElementById("st").innerHTML += "'" + colors[i] + "',";
+        }
+        else{
+            document.getElementById("st").innerHTML += "'" + colors[i] + "']";
+        }
+    }
+    for(y0 = 0; y0 < canvas.height; y0++){
+        field.push([]);
+        for(x0 = 0; x0 < canvas.width; x0++){
+            field[y0].push(colors[random(0,colorC-1)]);
+        }
+    }
+    draw();
+    setTimeout(smooth, 100);
+}
+
+function draw(){
+    for(y1 = 0; y1 < field.length; y1++){
+        for(x1 = 0; x1 < field[0].length; x1++){
+            ctx.fillStyle = field[y1][x1];
+            ctx.fillRect(x1, y1, 1, 1);
+        }
+    }
+}
+
+function GEFR(color){
+    var colorsOnly = color.substring(color.indexOf('(') + 1, color.lastIndexOf(')')).split(/,\s*/);
+    return {
+        r: Number(colorsOnly[0]),
+        g: Number(colorsOnly[1]),
+        b: Number(colorsOnly[2])
+    }
+}
+
+function combineRGB(r, g, b){
+    return 'rgb(' + r + "," + g + "," + b + ")";
+}
+
+function smooth(){
+    for(y = 1; y < field.length-1; y++){
+        for(x = 1; x < field[0].length-1; x++){
+            let cc = field[y][x];
+            for(i = -1; i < 2; i++){
+                for(i0 = -1; i0 < 2; i0++){
+                    if(GEFR(cc).r > GEFR(field[y+i][x+i0]).r + tolerance){
+                        let oc = field[y+i][x+i0];
+                        field[y][x] = combineRGB(GEFR(cc).r - agg,GEFR(cc).g,GEFR(cc).b);
+                        field[y+i][x+i0] = combineRGB(GEFR(oc).r + agg,GEFR(oc).g,GEFR(oc).b);
+                    }
+                    else{
+                        let oc = field[y+i][x+i0];
+                        field[y][x] = combineRGB(GEFR(cc).r + agg,GEFR(cc).g,GEFR(cc).b);
+                        field[y+i][x+i0] = combineRGB(GEFR(oc).r - agg,GEFR(oc).g,GEFR(oc).b);
+                    }
+                    if(GEFR(cc).g > GEFR(field[y+i][x+i0]).g + tolerance){
+                        let oc = field[y+i][x+i0];
+                        field[y][x] = combineRGB(GEFR(cc).r,GEFR(cc).g - agg,GEFR(cc).b);
+                        field[y+i][x+i0] = combineRGB(GEFR(oc).r,GEFR(oc).g + agg,GEFR(oc).b);
+                    }
+                    else{
+                        let oc = field[y+i][x+i0];
+                        field[y][x] = combineRGB(GEFR(cc).r,GEFR(cc).g + agg,GEFR(cc).b);
+                        field[y+i][x+i0] = combineRGB(GEFR(oc).r,GEFR(oc).g - agg,GEFR(oc).b);
+                    }
+                    if(GEFR(cc).b > GEFR(field[y+i][x+i0]).b + tolerance){
+                        let oc = field[y+i][x+i0];
+                        field[y][x] = combineRGB(GEFR(cc).r,GEFR(cc).g,GEFR(cc).b - agg);
+                        field[y+i][x+i0] = combineRGB(GEFR(oc).r,GEFR(oc).g,GEFR(oc).b+ agg);
+                    }
+                    else{
+                        let oc = field[y+i][x+i0];
+                        field[y][x] = combineRGB(GEFR(cc).r,GEFR(cc).g ,GEFR(cc).b+ agg);
+                        field[y+i][x+i0] = combineRGB(GEFR(oc).r,GEFR(oc).g,GEFR(oc).b - agg);
+                    }
+                }
+            }
+        }
+    }
+    draw();
+    document.getElementById("ld").style.display = "none";
+}
+
+</script>
+</body>
+</html> 

@@ -1,0 +1,202 @@
+body{
+  margin: 0;
+  padding: 0;
+  background-color: #901FBA;
+  transition: background-color 50s ease;
+}
+canvas{
+  user-select: none;
+  position: absolute;
+  background-color: none;
+  opacity: 0;
+  transition: all 1s ease;
+}
+video{
+  position: absolute;
+  border: 0px 0px 0px 0px;
+  opacity: 0;
+  transition: all 0.5s ease;
+  height: 100%;
+}
+img{
+  position:absolute;
+}
+button{
+  position:absolute;
+  display:block;
+  text-shadow: 2px 2px black;
+  position: absolute;
+  transition: all 0.5s ease;
+  color: white;
+  background: transparent;
+  font-family: Montserrat;
+  font-size: 1vw;
+  width: 50%;
+  bottom: 0px;
+  padding: 10px 0px;
+  border: none;
+  opacity: 0;
+}
+button:focus{
+  border: none;
+  outline: none;
+}
+#imageContainer{
+  transition: all 5s ease;
+  opacity: 0;
+  position: absolute;
+  height: 100%;
+  overflow: hidden hidden;
+}
+#LVstars{
+  user-select: none;
+  display:block;
+  top: -10%;
+}
+.narvC{
+  pointer-events: none;
+  transition: all 0.5s ease;
+  opacity: 0;
+  position: absolute;
+  height: 100%;
+  width: 30%;
+  overflow: hidden;
+}
+.narvesen{
+  height: 100%;
+}
+#nv1, #nv2{
+  font-family: Montserrat;
+  text-shadow: 1px 1px black;
+  font-size: 2vw;
+  position: absolute;
+  transition: all 0.5s ease;
+  color: white;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+#n2{
+  right: 0px;
+}
+.center{
+  left: 50%;
+  transform: translateX(-50%);
+}
+#console2{
+  padding: 7px 7px;
+  transition: all 1s ease;
+  opacity: 0;
+  position: absolute;
+  right: 0px;
+  overflow-y: scroll;
+  height: 50px;
+  width: 50px;
+  background-color: rgba(255, 255, 255, 0.2);
+  font-family: Montserrat;
+  text-shadow: 1px 1px black;
+  font-size: 0.7vw;
+  color: white;
+}
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+#timeContainer{
+  transition: all 0.5s ease;
+  position: absolute;
+  width: 5%;
+  height: 5%;
+  border: none;
+  background-color: transparent;
+  padding: 2px 2px;
+  opacity: 0;
+}
+#timeDisplay, #dayDisplay, #podDisplay{
+  text-shadow: 2px 2px black;
+  user-select: none;
+  position: absolute;
+  transition: all 0.5s ease;
+  color: white;
+  font-family: Montserrat;
+  font-size: 1.75vw;
+  width: 50%;
+}
+#dayDisplay{
+  width: 100%;
+  opacity: 0;
+  font-size: 0.75vw;
+  top: 0.25vw;
+}
+#podDisplay{
+  transform: translateX(-10%);
+  top: 1.1vw;
+  width: 100%;
+  opacity: 0;
+  font-size: 0.75vw;
+}
+#timeSlider{
+  -moz-appearance: none;
+  border: none;
+  outline: none;
+  transition: all 0.5s ease;
+  position: absolute;
+  top: 2.25vw;
+  width: 0px;
+  height: 0.5vw;
+  background-image: linear-gradient(to right, rgba(181, 65, 244, 1) , rgba(152, 244, 66, 1) , rgba(66, 244, 244, 1));
+  -webkit-appearance: none;
+  outline: none;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
+}
+#timeSlider:focus{
+  border: none;
+  outline: none;
+}
+#timeSlider::-webkit-slider-thumb {
+  transition: all 0.5s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0px;
+  height: 10px;
+  background: black;
+  cursor: pointer;
+}
+#timeSlider::-moz-range-thumb{
+  border: none;
+  outline: none;
+  transition: all 0.5s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0px;
+  height: 0px;
+  background: black;
+  cursor: pointer;
+}
+#timeContainer:hover #timeDisplay{
+  left: 0%;
+}
+#timeContainer:hover #dayDisplay{
+  transform: translateX(2%);
+  left: 100%;
+  opacity: 1;
+  width: 100%;
+}
+#timeContainer:hover #podDisplay{
+  transform: translateX(2%);
+  left: 100%;
+  opacity: 1;
+  width: 150%;
+}
+#timeContainer:hover #timeSlider{
+  transform: translateX(-4vw);
+  opacity: 1;
+  width: 200%;
+}
+#timeContainer:hover #timeSlider::-webkit-slider-thumb{
+  width: 10px;
+}
+#timeContainer:hover #timeSlider::-moz-range-thumb{
+  width: 10px;
+  height: 10px;
+}

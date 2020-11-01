@@ -1,0 +1,269 @@
+<HTML>
+<head>
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<title> Circle Animation </title>
+<style>
+    body{
+        margin: 0;
+        background-color: black;
+    }
+    .container{
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+    }
+    .settings{
+        position: relative;
+        top: 20px;
+        left: 20px;
+        width: 20%;
+    }
+    .canvas{
+        position: absolute;
+        top: 2%;
+        right: 5%;
+        width: 70%;
+        height: 100%;
+    }
+    .tool{
+        position: relative;
+        color: #f44242;
+        font-family: "Montserrat";
+        font-size: 20px;
+        text-align: center
+    }
+    button, input{
+        outline: none;
+        margin: 10px 0px;
+        position: relative;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 0%;
+        width: 80%;
+        color: white;
+        background-color: #f44242;
+        border: 2px solid #a02b2b;
+        transition: 0.2s ease-in-out;
+        padding: 7px;
+        font-family: "Montserrat";
+        font-size: 20px;
+    }
+    button:hover{
+        background-color: transparent;
+        color: #f44242;
+        border-color: transparent;
+        width: 90%;
+    }
+    button:focus{
+        outline:none;
+    }
+    input{
+        -webkit-appearance: none;
+        width: 80%;
+        height: 25px;
+        background: #f44242;
+    }
+    input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: white;
+        cursor: pointer;
+    }
+    input#purple{
+        background: #572087;
+        border: 2px solid #371356;
+    }
+    div#purple{
+        color: #572087;
+    }
+    button#purple{
+        background: #572087;
+        border: 2px solid #371356;
+    }
+    button#purple:hover{
+        background-color: transparent;
+        color: #572087;
+        border-color: transparent;
+    }
+    input#green{
+        background: #63ff42;
+        border: 2px solid #4aba32;
+    }
+    div#green{
+        color: #63ff42;
+    }
+    button#green{
+        background: #63ff42;
+        border: 2px solid #4aba32;
+    }
+    button#green:hover{
+        background-color: transparent;
+        color: #63ff42;
+        border-color: transparent;
+    }
+    input#blue{
+        background: #4256f4;
+        border: 2px solid #3241ba;
+    }
+    div#blue{
+        color: #4256f4;
+    }
+    button#blue{
+        background: #4256f4;
+        border: 2px solid #3241ba;
+    }
+    button#blue:hover{
+        background-color: transparent;
+        color: #4256f4;
+        border-color: transparent;
+    }
+    button.p0, button.p1, button.p2, button.p3{
+        font-size:15px;
+        padding: 5px;
+    }
+</style>
+</head>
+<body>
+<div id = "container">
+    <div class = "settings">
+        <div class="tool" id="red">Red Start Value</div>
+        <input type="range" id="red" min="1" max="255" value="100">
+        <div class="tool" id="red">Red Modifier</div>
+        <button type="button" id="red" onclick="chp(0);" class = "p0">Negative</button>
+        <div class="tool" id="green">Green Start Value</div>
+        <input type="range" id="green" min="1" max="255" value="255">
+        <div class="tool" id="green">Green Modifier</div>
+        <button type="button" id="green" onclick="chp(1);" class = "p1">Negative</button>
+        <div class="tool" id="blue">Blue Start Value</div>
+        <input type="range" id="blue" min="1" max="255" value="255">
+        <div class="tool" id="blue">Blue Modifier</div>
+        <button type="button" id="blue" onclick="chp(2);" class = "p2">Negative</button>
+        <div class="tool" id="purple">Animation Speed</div>
+        <input type="range" id="purple" min="5" max="150" value="50">
+        <div class="tool" id="purple">Paint Modifier</div>
+        <button type="button" id="purple" onclick="chc();" class = "p3">Positive</button>
+        <div class="tool" id="purple">Custom Code:</div>
+        <input type="text" value="" id = "purple"><br>
+        <button type="button" class="reset" id="purple" onclick="reset();">Reset</button>
+    </div>
+    <div class = "canvas" id = "canvas">
+        <canvas id=myCanvas width=300 height=300 style="background-color: none;"> 
+        </canvas>
+    </div>
+</div>
+<script>
+var ctx = myCanvas.getContext("2d"); 
+var circs = [];
+var cnt = 30;
+var mod = 5;
+var smod = 6;
+var speed = 0.01;
+var sz = 2;
+var colors = [100, 200, 255];
+var colord = [-1, -1, -1];
+var b = false;
+var xo, yo;
+
+function ch(inp, h){
+    return Math.pow((h*inp)/sz, 1);
+}
+
+function combineRGB(r, g, b){
+    return 'rgb(' + r + "," + g + "," + b + ")";
+}
+
+function getRC() {
+    var o = Math.round, r = Math.random;
+    return 'rgb(' + o(r()*255) + ',' + o(r()*255) + ',' + o(r()*255) + ')';
+}
+
+function circ(a, l, c, dir){
+    this.c = c;
+    this.a = a;
+    this.l = l;
+    this.dir = dir;
+}
+
+function init(){
+    canvas = document.getElementById("myCanvas");
+    canvas.width = document.getElementById("canvas").clientWidth;
+    canvas.height = document.getElementById("canvas").clientHeight;
+    xo = canvas.width/2;
+    yo = canvas.height/2 > xo ? xo : canvas.height/2;
+    gen();
+    setInterval(draw, 1000/60);
+}
+
+function gen(){
+    let hm = canvas.height < canvas.width ? canvas.height/cnt : canvas.width/cnt;
+    circs = [];
+    for(i = 0; i < cnt; i++){
+        colors[0] += (255/cnt)*colord[0];
+        colors[1] += (255/cnt)*colord[1];
+        colors[2] += (255/cnt)*colord[2];
+        let cc = combineRGB(colors[0], colors[1], colors[2]);
+        for(z = 0; z < Math.pow(i * mod, 0.7); z++){
+            circs.push(new circ(((360 / i*mod) * z) / 180 * Math.PI, ch(i, hm), cc, Math.random()*2-1));
+        }
+    }
+    draw();
+}
+
+function draw(){
+    let hm = canvas.height < canvas.width ? canvas.height/cnt : canvas.width/cnt;
+    if(b){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
+    for(i = 0; i < circs.length; i++){
+        circs[i].a += speed * circs[i].dir;
+        if(circs[i].a > 2 * Math.PI){
+            circs[i].a -= 2 * Math.PI;
+        }
+        else if(circs[i].a < 0){
+            circs[i].a += 2 * Math.PI;
+        }
+        ctx.fillStyle = circs[i].c;
+        ctx.beginPath();
+        ctx.arc(Math.sin(circs[i].a)*circs[i].l + xo,Math.cos(circs[i].a)*circs[i].l + yo,hm/smod,0,Math.PI*2);
+        ctx.fill();
+    }
+}
+
+function chp(id){
+    colord[id] = -colord[id];
+    document.getElementsByClassName("p" + id)[0].innerHTML = document.getElementsByClassName("p" + id)[0].innerHTML == "Positive" ? "Negative" : "Positive";
+}
+
+function chc(){
+    document.getElementsByClassName("p3")[0].innerHTML = document.getElementsByClassName("p3")[0].innerHTML == "Positive" ? "Negative" : "Positive";
+}
+
+function reset(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    var ins = document.getElementsByTagName("input");
+    colors = [Number(ins[0].value), Number(ins[1].value), Number(ins[2].value)];
+    speed = ins[3].value/5000;
+    b = document.getElementsByClassName("p3")[0].innerHTML == "Negative" ? true : false;
+    try{
+        eval(ins[4].value);
+    }
+    catch(e){
+        if(ins[4].value.substring(0,3) == "bg/"){
+            let v = ins[4].value;
+            v = v.substring(3,v.length);
+            document.body.style.backgroundColor = v;
+        }
+        else{
+            alert(e);
+            ins[4].value = "";
+        }
+    }
+    gen();
+}
+init();
+</script>
+</body>
+</html> 
